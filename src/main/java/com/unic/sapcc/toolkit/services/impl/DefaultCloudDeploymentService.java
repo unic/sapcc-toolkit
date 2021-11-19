@@ -71,11 +71,14 @@ public class DefaultCloudDeploymentService extends AbstractCloudService implemen
 				return false;
 			}
 			DeploymentProgressDTO deploymentProgress = getDeploymentProgress(deploymentCode);
-			LOG.info("Deployment progress (%): " + deploymentProgress.getPercentage());
-			if (DeploymentStatus.DEPLOYED.equals(deploymentProgress.getDeploymentStatus())) {
-				LOG.info("Deployment progress: " + DeploymentStatus.DEPLOYED);
-				return true;
+			if (deploymentProgress != null) {
+				LOG.info("Deployment progress (%): " + deploymentProgress.getPercentage());
+				if (DeploymentStatus.DEPLOYED.equals(deploymentProgress.getDeploymentStatus())) {
+					LOG.info("Deployment progress: " + DeploymentStatus.DEPLOYED);
+					return true;
+				}
 			}
+
 			TimeUnit.SECONDS.sleep(sleepTime);
 		}
 	}
@@ -83,13 +86,14 @@ public class DefaultCloudDeploymentService extends AbstractCloudService implemen
 	private DeploymentProgressDTO getDeploymentProgress(String deploymentCode) {
 		LOG.info("Retrieving deployment progress for deploymentCode: " + deploymentCode);
 		HttpEntity<BodyDTO> entity = prepareHttpEntity(null);
-		ResponseEntity<DeploymentProgressDTO> deploymentProgressEntity = null;
+		ResponseEntity<DeploymentProgressDTO> deploymentProgressEntity;
 		try {
 			deploymentProgressEntity = restTemplate.exchange(
 					"https://portalrotapi.hana.ondemand.com/v2/subscriptions/" + subscriptionCode + "/deployments/" + deploymentCode
 							+ "/progress", HttpMethod.GET, entity, DeploymentProgressDTO.class);
 		} catch (ResourceAccessException raex) {
 			LOG.error(raex.getMessage());
+			return null;
 		}
 
 		return deploymentProgressEntity.getBody();
