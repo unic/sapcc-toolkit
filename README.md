@@ -48,8 +48,8 @@ You can use this SAP CC CLI Toolkit by running following command:
 
 ## Examples
 ### Create a new build without deployment
-``./gradlew bootRun --args='--toolkit.build=true``
+``./gradlew bootRun --args='--toolkit.build=true'``
 ### Create a new build and deploy this newly build
-``./gradlew bootRun --args='--toolkit.build=true,--toolkit.deploy=true``
+``./gradlew bootRun --args='--toolkit.build=true,--toolkit.deploy=true'``
 ### Start a new deployment for a given buildCode
-``./gradlew bootRun --args='--toolkit.deploy=true,--toolkit.deploy.buildCode=20211119.6``
+``./gradlew bootRun --args='--toolkit.deploy=true,--toolkit.deploy.buildCode=20211119.6'``
