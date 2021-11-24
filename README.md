@@ -45,11 +45,24 @@ You can use this SAP CC CLI Toolkit by running following command:
 | --toolkit.deploy.dbUpdateMode | UPDATE, NONE | Database update mode | NONE |
 | --toolkit.deploy.strategy | ROLLING_UPDATE, RECREATE | Deployment strategy (with downtime or not) | ROLLING_UPDATE |
 
-
 ## Examples
+
 ### Create a new build without deployment
+
 ``./gradlew bootRun --args='--toolkit.build=true'``
-### Create a new build and deploy this newly build
-``./gradlew bootRun --args='--toolkit.build=true,--toolkit.deploy=true'``
-### Start a new deployment for a given buildCode
-``./gradlew bootRun --args='--toolkit.deploy=true,--toolkit.deploy.buildCode=20211119.6'``
+
+### Create a new release build without deployment
+
+``./gradlew bootRun --args='--toolkit.build=true --toolkit.build.branch=release/1.6.0 --toolkit.build.name=release-1.6.0'``
+
+### Create a new develop (default) build and deploy this newly build on d1 without URS
+
+``./gradlew bootRun --args='--toolkit.build=true --toolkit.deploy=true'``
+
+### Start a new rolling deployment for a given build on d1 without URS
+
+``./gradlew bootRun --args='--toolkit.deploy=true --toolkit.deploy.buildCode=20211122.1'``
+
+### Start a new rolling deployment for a given build on s1 with URS
+
+``./gradlew bootRun --args='--toolkit.deploy=true --toolkit.deploy.buildCode=20211122.1 --toolkit.deploy.dbUpdateMode=UPDATE'``

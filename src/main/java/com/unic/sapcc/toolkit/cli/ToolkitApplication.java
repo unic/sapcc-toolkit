@@ -13,6 +13,7 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.web.client.RestTemplateBuilder;
+import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.core.env.Environment;
@@ -33,9 +34,10 @@ public class ToolkitApplication implements CommandLineRunner {
 
 	@Autowired
 	public DefaultCloudDeploymentService cloudDeploymentService;
-
 	@Autowired
 	public Environment env;
+	@Autowired
+	private ConfigurableApplicationContext applicationContext;
 
 	public static void main(String[] args) {
 		LOG.info("Toolkit started");
@@ -87,6 +89,8 @@ public class ToolkitApplication implements CommandLineRunner {
 			LOG.info("Deployment progress will be watched: " + deploymentCode);
 			deploymentSuccessful = watchDeploymentProgress(deploymentCode);
 		}
+
+		applicationContext.close();
 	}
 
 	private String createBuild() {
@@ -155,7 +159,6 @@ public class ToolkitApplication implements CommandLineRunner {
 			if (StringUtils.hasText(deployStrategy)) {
 				DeployStrategy.valueOf(deployStrategy);
 			}
-
 		} catch (IllegalArgumentException iae) {
 			LOG.error("Illegal deployment arguments given", iae);
 			isInvalid = true;
