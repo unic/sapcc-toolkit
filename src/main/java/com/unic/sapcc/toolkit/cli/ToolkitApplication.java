@@ -34,8 +34,10 @@ public class ToolkitApplication implements CommandLineRunner {
 
 	@Autowired
 	public DefaultCloudDeploymentService cloudDeploymentService;
+
 	@Autowired
 	public Environment env;
+	
 	@Autowired
 	private ConfigurableApplicationContext applicationContext;
 

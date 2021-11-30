@@ -65,4 +65,4 @@ You can use this SAP CC CLI Toolkit by running following command:
 
 ### Start a new rolling deployment for a given build on s1 with URS
 
-``./gradlew bootRun --args='--toolkit.deploy=true --toolkit.deploy.buildCode=20211122.1 --toolkit.deploy.dbUpdateMode=UPDATE'``
+``./gradlew bootRun --args='--toolkit.deploy=true --toolkit.deploy.buildCode=20211122.1 --toolkit.deploy.dbUpdateMode=UPDATE --toolkit.deploy.environment=s1'``
