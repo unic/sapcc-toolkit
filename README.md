@@ -66,3 +66,13 @@ You can use this SAP CC CLI Toolkit by running following command:
 ### Start a new rolling deployment for a given build on s1 with URS
 
 ``./gradlew bootRun --args='--toolkit.deploy=true --toolkit.deploy.buildCode=20211122.1 --toolkit.deploy.dbUpdateMode=UPDATE --toolkit.deploy.environment=s1'``
+
+
+## Publication
+
+### Prerequisites
+For publishing artifacts we use the [maven-publish](https://docs.gradle.org/current/userguide/publishing_maven.html) plugin. Since the Unic nexus repository is defined unter the name 'unicEcom' you need to set the variables `unicEcomUsername` and `unicEcomPassword`. This can be done in your `~/.gradle/gradle.properties` for example.
+
+### Upload current publication
+
+```./gradlew publish```
