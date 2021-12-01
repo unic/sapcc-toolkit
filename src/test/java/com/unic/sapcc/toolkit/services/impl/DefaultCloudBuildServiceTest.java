@@ -49,7 +49,7 @@ class DefaultCloudBuildServiceTest
 	private RestTemplate restTemplate;
 
 	@Captor
-	private ArgumentCaptor<HttpEntity<BodyDTO>> entityCaptor;
+	private ArgumentCaptor<HttpEntity<BuildRequestDTO>> entityCaptor;
 
 	@InjectMocks
 	private CloudBuildService unitUnderTest = new DefaultCloudBuildService();
@@ -79,7 +79,7 @@ class DefaultCloudBuildServiceTest
 
 		verify(restTemplate).exchange(eq(url), eq(HttpMethod.POST), entityCaptor.capture(), eq(BuildResponseDTO.class));
 
-		BuildRequestDTO body = (BuildRequestDTO) entityCaptor.getValue().getBody();
+		BuildRequestDTO body = entityCaptor.getValue().getBody();
 		assertEquals(appCode, body.getApplicationCode());
 		assertEquals(branch, body.getBranch());
 		assertEquals(name, body.getName());
