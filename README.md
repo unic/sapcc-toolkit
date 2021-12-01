@@ -12,7 +12,7 @@ To setup your SAP CC CLI Toolkit please provide your:
 
 using the file: **src/main/resources/application.properties**
 
-```
+```properties
 toolkit.subscriptionCode = <insert your SAP CC subscription code here>
 toolkit.apiKey = <insert your SAP CC API key here>
 
@@ -27,46 +27,60 @@ toolkit.deploy.dbUpdateMode = <insert your preferred database update mode for de
 toolkit.deploy.strategy = <insert your preferred deployment strategy here>
 ```
 
+## Building
+
+Please us ethe default Spring boot gradle tasks to build this application:
+
+```shell
+./gradlew bootJar
+```
+
 
 ## Usage
-You can use this SAP CC CLI Toolkit by running following command:
-``./gradlew bootRun --args='--toolkit.build=true,--toolkit.build.branch=develop,--toolkit.build.name=develop-20220101,--toolkit.deploy=true,--toolkit.deploy.system=d1,--toolkit.deploy.dbUpdateMode=UPDATE,--toolkit.deploy.strategy=ROLLING_UPDATE'``
+You can use this SAP CC CLI Toolkit by running following command (example):
+```shell
+java -jar build/libs/sapcc-toolkit-*.jar \
+  --build \
+  --branch develop \
+  --name develop-20220101 \
+  --deploy \
+  --environment d1 \
+  --updatemode UPDATE \
+  --strategy ROLLING_UPDATE
+```
 
-### Supported command line arguments:
-| Command Line | Allowed values | Description | Default Value |
-| --- | --- | --- | --- |
-| --toolkit.build |[true/false]|  Decide if build should be triggered | false |
-| --toolkit.build.applicationCode | String | Name of the SAP Cloud application | \<empty> |
-| --toolkit.build.branch | String | Name of the branch which should be build | develop |
-| --toolkit.build.name | String | Name of the build | develop-\<yyyy-MM-dd> |
-| --toolkit.deploy | [true/false] | Decide if deployment should be triggered | false |
-| --toolkit.deploy.buildCode | String | If provided, this given build will be deployed. Otherwise the newly created build will be deployed | \<empty> |
-| --toolkit.deploy.environment | d1, s1 | System environment which should be deployed | d1 |
-| --toolkit.deploy.dbUpdateMode | UPDATE, NONE | Database update mode | NONE |
-| --toolkit.deploy.strategy | ROLLING_UPDATE, RECREATE | Deployment strategy (with downtime or not) | ROLLING_UPDATE |
+Run `java -jar build/libs/sapcc-toolkit-*.jar -h` to print a usage explanation
 
 ## Examples
 
 ### Create a new build without deployment
 
-``./gradlew bootRun --args='--toolkit.build=true'``
-
+```shell
+java -jar build/libs/sapcc-toolkit-*.jar --build
+```
 ### Create a new release build without deployment
 
-``./gradlew bootRun --args='--toolkit.build=true --toolkit.build.branch=release/1.6.0 --toolkit.build.name=release-1.6.0'``
+```shell
+java -jar build/libs/sapcc-toolkit-*.jar --build  --branch release/1.6.0  --name release-1.6.0
+```
 
 ### Create a new develop (default) build and deploy this newly build on d1 without URS
 
-``./gradlew bootRun --args='--toolkit.build=true --toolkit.deploy=true'``
+```shell
+java -jar build/libs/sapcc-toolkit-*.jar --build  --deploy
+```
 
 ### Start a new rolling deployment for a given build on d1 without URS
 
-``./gradlew bootRun --args='--toolkit.deploy=true --toolkit.deploy.buildCode=20211122.1'``
+```shell
+java -jar build/libs/sapcc-toolkit-*.jar --deploy  --buildcode 20211122.1
+```
 
 ### Start a new rolling deployment for a given build on s1 with URS
 
-``./gradlew bootRun --args='--toolkit.deploy=true --toolkit.deploy.buildCode=20211122.1 --toolkit.deploy.dbUpdateMode=UPDATE --toolkit.deploy.environment=s1'``
-
+```shell
+java -jar build/libs/sapcc-toolkit-*.jar --deploy  --buildcode 20211122.1 --updatemode UPDATE --environment s1
+```
 
 ## Publication
 
