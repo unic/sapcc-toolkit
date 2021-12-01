@@ -1,13 +1,100 @@
 package com.unic.sapcc.toolkit.cli;
 
-import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
+import static com.unic.sapcc.toolkit.enums.CloudEnvironment.d1;
+import static com.unic.sapcc.toolkit.enums.DatabaseUpdateMode.NONE;
+import static com.unic.sapcc.toolkit.enums.DeployStrategy.ROLLING_UPDATE;
 
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.core.env.Environment;
+import org.springframework.test.context.ActiveProfiles;
+
+import com.unic.sapcc.toolkit.dto.DeploymentRequestDTO;
+import com.unic.sapcc.toolkit.services.impl.DefaultCloudBuildService;
+import com.unic.sapcc.toolkit.services.impl.DefaultCloudDeploymentService;
+
+
+@ActiveProfiles("test")
 @SpringBootTest
-class ToolkitApplicationTests {
+@ExtendWith(MockitoExtension.class)
+class ToolkitApplicationTests
+{
+
+	public static final String DEPLOYMENT_CODE = "foobar";
+	public static final String BUILD_CODE = "booyakka";
+	public static final String APPCODE = "dummyAppcode";
+	public static final String BRANCH_NAME = "dummyBranchName";
+	public static final String BUILD_NAME = "dummyBuildName";
+	@Mock
+	public DefaultCloudBuildService cloudBuildService;
+
+	@Mock
+	public DefaultCloudDeploymentService cloudDeploymentService;
+
+	@Mock
+	public Environment env;
+
+	@Mock
+	private ConfigurableApplicationContext applicationContext;
+
+	@InjectMocks
+	ToolkitApplication unitUnderTest = new ToolkitApplication();
 
 	@Test
-	void contextLoads() {
+	void testFullParameterSet() throws Exception
+	{
+		String[] args = { "-b", "-a", APPCODE, "-r", BRANCH_NAME, "-n", BUILD_NAME, "-d", "-s", ROLLING_UPDATE.name(), "-u",
+				NONE.name(), "-e", d1.name() };
+		DeploymentRequestDTO deploymentRequest = new DeploymentRequestDTO(BUILD_CODE, NONE, d1, ROLLING_UPDATE);
+
+		Mockito.when(cloudBuildService.createBuild(APPCODE, BRANCH_NAME, BUILD_NAME)).thenReturn(BUILD_CODE);
+		Mockito.when(cloudDeploymentService.createDeploymentRequestDTO(BUILD_CODE, NONE, d1, ROLLING_UPDATE))
+				.thenReturn(deploymentRequest);
+		Mockito.when(cloudDeploymentService.createDeployment(deploymentRequest)).thenReturn(DEPLOYMENT_CODE);
+
+		unitUnderTest.run(args);
+
+		Mockito.verify(cloudBuildService).handleBuildProgress(BUILD_CODE);
+		Mockito.verify(cloudDeploymentService).handleDeploymentProgress(DEPLOYMENT_CODE);
+
+	}
+
+	@Test
+	void testBuildOnly() throws Exception
+	{
+		String[] args = { "-b", "-a", APPCODE, "-n", BUILD_NAME };
+
+		Mockito.when(cloudBuildService.createBuild(APPCODE, "develop", BUILD_NAME)).thenReturn(BUILD_CODE);
+
+		unitUnderTest.run(args);
+
+		Mockito.verify(cloudBuildService).handleBuildProgress(BUILD_CODE);
+
+		Mockito.verifyNoInteractions(cloudDeploymentService);
+	}
+
+	@Test
+	void testDeployOnly() throws Exception
+	{
+		String[] args = { "-d", "-c", BUILD_CODE, "-s", ROLLING_UPDATE.name(), "-u", NONE.name(), "-e", d1.name() };
+
+		DeploymentRequestDTO deploymentRequest = new DeploymentRequestDTO(BUILD_CODE, NONE, d1, ROLLING_UPDATE);
+		Mockito.when(cloudDeploymentService.createDeploymentRequestDTO(BUILD_CODE, NONE, d1, ROLLING_UPDATE))
+				.thenReturn(deploymentRequest);
+		Mockito.when(cloudDeploymentService.createDeployment(deploymentRequest)).thenReturn(DEPLOYMENT_CODE);
+
+
+		unitUnderTest.run(args);
+
+		Mockito.verify(cloudBuildService).handleBuildProgress(BUILD_CODE);
+		Mockito.verify(cloudDeploymentService).handleDeploymentProgress(DEPLOYMENT_CODE);
+		Mockito.verifyNoMoreInteractions(cloudBuildService);
 	}
 
 }
