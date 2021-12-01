@@ -31,6 +31,7 @@ import com.unic.sapcc.toolkit.enums.DeployStrategy;
 import com.unic.sapcc.toolkit.services.impl.DefaultCloudBuildService;
 import com.unic.sapcc.toolkit.services.impl.DefaultCloudDeploymentService;
 
+
 @Profile("!test")
 @SpringBootApplication
 @ComponentScan(basePackages = "com.unic.sapcc.toolkit")
@@ -111,7 +112,8 @@ public class ToolkitApplication implements CommandLineRunner
 		try
 		{
 			cmd = parser.parse(options, args);
-			if(args.length == 0 || cmd.hasOption(SHORTOPTION_HELP)){
+			if (args.length == 0 || cmd.hasOption(SHORTOPTION_HELP))
+			{
 				printHelp(options);
 				System.exit(0);
 			}
@@ -173,33 +175,31 @@ public class ToolkitApplication implements CommandLineRunner
 		return cloudDeploymentService.createDeployment(deploymentRequestDTO);
 	}
 
-	private boolean watchBuildProgress(final String buildCode)
+	private void watchBuildProgress(final String buildCode)
 	{
 		LOG.info("Build progress will be watched: " + buildCode);
 		try
 		{
-			return cloudBuildService.handleBuildProgress(buildCode);
+			cloudBuildService.handleBuildProgress(buildCode);
 		}
-		catch (InterruptedException ie)
+		catch (InterruptedException | IllegalStateException e)
 		{
-			LOG.error("Error during build watching progress", ie);
+			LOG.error("Error during build watching progress", e);
 			System.exit(1);
 		}
-		return false;
 	}
 
-	private boolean watchDeploymentProgress(final String deploymentCode)
+	private void watchDeploymentProgress(final String deploymentCode)
 	{
 		try
 		{
-			return cloudDeploymentService.handleDeploymentProgress(deploymentCode);
+			cloudDeploymentService.handleDeploymentProgress(deploymentCode);
 		}
-		catch (InterruptedException ie)
+		catch (InterruptedException | IllegalStateException e)
 		{
-			LOG.error("Error during deployment watching progress", ie);
+			LOG.error("Error during deployment watching progress", e);
 			System.exit(1);
 		}
-		return false;
 	}
 
 }

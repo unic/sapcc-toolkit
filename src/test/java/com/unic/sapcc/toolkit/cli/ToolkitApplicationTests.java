@@ -12,7 +12,6 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.ConfigurableApplicationContext;
-import org.springframework.core.env.Environment;
 import org.springframework.test.context.ActiveProfiles;
 
 import com.unic.sapcc.toolkit.dto.DeploymentRequestDTO;
@@ -25,20 +24,17 @@ import com.unic.sapcc.toolkit.services.impl.DefaultCloudDeploymentService;
 @ExtendWith(MockitoExtension.class)
 class ToolkitApplicationTests
 {
-
-	public static final String DEPLOYMENT_CODE = "foobar";
-	public static final String BUILD_CODE = "booyakka";
-	public static final String APPCODE = "dummyAppcode";
-	public static final String BRANCH_NAME = "dummyBranchName";
-	public static final String BUILD_NAME = "dummyBuildName";
-	@Mock
-	public DefaultCloudBuildService cloudBuildService;
+	private static final String DEPLOYMENT_CODE = "foobar";
+	private static final String BUILD_CODE = "booyakka";
+	private static final String APPCODE = "dummyAppcode";
+	private static final String BRANCH_NAME = "dummyBranchName";
+	private static final String BUILD_NAME = "dummyBuildName";
 
 	@Mock
-	public DefaultCloudDeploymentService cloudDeploymentService;
+	private DefaultCloudBuildService cloudBuildService;
 
 	@Mock
-	public Environment env;
+	private DefaultCloudDeploymentService cloudDeploymentService;
 
 	@Mock
 	private ConfigurableApplicationContext applicationContext;
@@ -61,8 +57,8 @@ class ToolkitApplicationTests
 		unitUnderTest.run(args);
 
 		Mockito.verify(cloudBuildService).handleBuildProgress(BUILD_CODE);
-		Mockito.verify(cloudDeploymentService).handleDeploymentProgress(DEPLOYMENT_CODE);
 
+		Mockito.verify(cloudDeploymentService).handleDeploymentProgress(DEPLOYMENT_CODE);
 	}
 
 	@Test
@@ -93,7 +89,9 @@ class ToolkitApplicationTests
 		unitUnderTest.run(args);
 
 		Mockito.verify(cloudBuildService).handleBuildProgress(BUILD_CODE);
+
 		Mockito.verify(cloudDeploymentService).handleDeploymentProgress(DEPLOYMENT_CODE);
+
 		Mockito.verifyNoMoreInteractions(cloudBuildService);
 	}
 

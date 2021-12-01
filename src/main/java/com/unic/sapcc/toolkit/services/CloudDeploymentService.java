@@ -33,8 +33,8 @@ public interface CloudDeploymentService {
 	 * Monitor the deployment progress for the given deploymentCode for a maximum time of ${toolkit.deploy.maxWaitTime}.
 	 * Progress will be updated for the given interval ${toolkit.deploy.sleepTime}.
 	 * @param deploymentCode
-	 * @return
 	 * @throws InterruptedException
+	 * @throes IllegalStateException
 	 */
-	public boolean handleDeploymentProgress(String deploymentCode) throws InterruptedException;
+	public void handleDeploymentProgress(String deploymentCode) throws InterruptedException, IllegalStateException;
 }
