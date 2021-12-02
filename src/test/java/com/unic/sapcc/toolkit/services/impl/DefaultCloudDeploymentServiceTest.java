@@ -115,8 +115,6 @@ class DefaultCloudDeploymentServiceTest {
 		when(env.getProperty(eq("toolkit.deploy.sleepTime"), anyString())).thenReturn("5");
 		when(env.getProperty(eq("toolkit.deploy.maxWaitTime"), anyString())).thenReturn("30");
 
-		boolean result = unitUnderTest.handleDeploymentProgress(deploymentCode);
-
-		assertTrue(result);
+		unitUnderTest.handleDeploymentProgress(deploymentCode);
 	}
 }

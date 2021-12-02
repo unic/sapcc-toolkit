@@ -141,8 +141,6 @@ class DefaultCloudBuildServiceTest {
 		when(env.getProperty(eq("toolkit.build.sleepTime"), anyString())).thenReturn("5");
 		when(env.getProperty(eq("toolkit.build.maxWaitTime"), anyString())).thenReturn("30");
 
-		boolean result = unitUnderTest.handleBuildProgress(buildCode);
-
-		assertTrue(result);
+		unitUnderTest.handleBuildProgress(buildCode);
 	}
 }
