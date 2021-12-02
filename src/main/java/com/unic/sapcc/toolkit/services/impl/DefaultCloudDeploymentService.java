@@ -58,7 +58,8 @@ public class DefaultCloudDeploymentService extends AbstractCloudService implemen
 	}
 
 	@Override
-	public boolean handleDeploymentProgress(String deploymentCode) throws InterruptedException {
+	public void handleDeploymentProgress(String deploymentCode) throws InterruptedException, IllegalStateException
+	{
 		long startTime = System.currentTimeMillis();
 
 		long sleepTime = Long.parseLong(env.getProperty("toolkit.deploy.sleepTime", "5"));
@@ -67,15 +68,14 @@ public class DefaultCloudDeploymentService extends AbstractCloudService implemen
 
 		while (true) {
 			if (startTime + maxWaitTime * 1000 * 60 < System.currentTimeMillis()) {
-				LOG.info("Maximium waiting time of " + maxWaitTime + " seconds reached. Aborting deployment progress watching process.");
-				return false;
+				throw new IllegalStateException("Maximium waiting time of " + maxWaitTime + " seconds reached. Aborting deployment progress watching process.");
 			}
 			DeploymentProgressDTO deploymentProgress = getDeploymentProgress(deploymentCode);
 			if (deploymentProgress != null) {
 				LOG.info("Deployment progress (%): " + deploymentProgress.getPercentage());
 				if (DeploymentStatus.DEPLOYED.equals(deploymentProgress.getDeploymentStatus())) {
 					LOG.info("Deployment progress: " + DeploymentStatus.DEPLOYED);
-					return true;
+					return;
 				}
 			}
 

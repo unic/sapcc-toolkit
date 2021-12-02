@@ -42,6 +42,7 @@ public interface CloudBuildService {
 	 * @param buildCode
 	 * @return true, if build progress is finished successfully, otherwise false
 	 * @throws InterruptedException
+	 * @throws IllegalStateException
 	 */
-	public boolean handleBuildProgress(String buildCode) throws InterruptedException;
+	public void handleBuildProgress(String buildCode) throws InterruptedException, IllegalStateException;
 }
