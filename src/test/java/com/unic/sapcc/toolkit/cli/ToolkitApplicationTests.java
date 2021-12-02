@@ -1,9 +1,8 @@
 package com.unic.sapcc.toolkit.cli;
 
-import static com.unic.sapcc.toolkit.enums.CloudEnvironment.d1;
-import static com.unic.sapcc.toolkit.enums.DatabaseUpdateMode.NONE;
-import static com.unic.sapcc.toolkit.enums.DeployStrategy.ROLLING_UPDATE;
-
+import com.unic.sapcc.toolkit.dto.DeploymentRequestDTO;
+import com.unic.sapcc.toolkit.services.impl.DefaultCloudBuildService;
+import com.unic.sapcc.toolkit.services.impl.DefaultCloudDeploymentService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -14,16 +13,14 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.test.context.ActiveProfiles;
 
-import com.unic.sapcc.toolkit.dto.DeploymentRequestDTO;
-import com.unic.sapcc.toolkit.services.impl.DefaultCloudBuildService;
-import com.unic.sapcc.toolkit.services.impl.DefaultCloudDeploymentService;
-
+import static com.unic.sapcc.toolkit.enums.CloudEnvironment.d1;
+import static com.unic.sapcc.toolkit.enums.DatabaseUpdateMode.NONE;
+import static com.unic.sapcc.toolkit.enums.DeployStrategy.ROLLING_UPDATE;
 
 @ActiveProfiles("test")
 @SpringBootTest
 @ExtendWith(MockitoExtension.class)
-class ToolkitApplicationTests
-{
+class ToolkitApplicationTests {
 	private static final String DEPLOYMENT_CODE = "foobar";
 	private static final String BUILD_CODE = "booyakka";
 	private static final String APPCODE = "dummyAppcode";
@@ -43,8 +40,7 @@ class ToolkitApplicationTests
 	ToolkitApplication unitUnderTest = new ToolkitApplication();
 
 	@Test
-	void testFullParameterSet() throws Exception
-	{
+	void testFullParameterSet() throws Exception {
 		String[] args = { "-b", "-a", APPCODE, "-r", BRANCH_NAME, "-n", BUILD_NAME, "-d", "-s", ROLLING_UPDATE.name(), "-u",
 				NONE.name(), "-e", d1.name() };
 		DeploymentRequestDTO deploymentRequest = new DeploymentRequestDTO(BUILD_CODE, NONE, d1, ROLLING_UPDATE);
@@ -62,8 +58,7 @@ class ToolkitApplicationTests
 	}
 
 	@Test
-	void testBuildOnly() throws Exception
-	{
+	void testBuildOnly() throws Exception {
 		String[] args = { "-b", "-a", APPCODE, "-n", BUILD_NAME };
 
 		Mockito.when(cloudBuildService.createBuild(APPCODE, "develop", BUILD_NAME)).thenReturn(BUILD_CODE);
@@ -76,15 +71,13 @@ class ToolkitApplicationTests
 	}
 
 	@Test
-	void testDeployOnly() throws Exception
-	{
+	void testDeployOnly() throws Exception {
 		String[] args = { "-d", "-c", BUILD_CODE, "-s", ROLLING_UPDATE.name(), "-u", NONE.name(), "-e", d1.name() };
 
 		DeploymentRequestDTO deploymentRequest = new DeploymentRequestDTO(BUILD_CODE, NONE, d1, ROLLING_UPDATE);
 		Mockito.when(cloudDeploymentService.createDeploymentRequestDTO(BUILD_CODE, NONE, d1, ROLLING_UPDATE))
 				.thenReturn(deploymentRequest);
 		Mockito.when(cloudDeploymentService.createDeployment(deploymentRequest)).thenReturn(DEPLOYMENT_CODE);
-
 
 		unitUnderTest.run(args);
 
@@ -94,5 +87,4 @@ class ToolkitApplicationTests
 
 		Mockito.verifyNoMoreInteractions(cloudBuildService);
 	}
-
 }

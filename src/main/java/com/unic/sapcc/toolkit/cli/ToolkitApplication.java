@@ -1,8 +1,11 @@
 package com.unic.sapcc.toolkit.cli;
 
-import java.time.Duration;
-import java.time.LocalDate;
-
+import com.unic.sapcc.toolkit.dto.DeploymentRequestDTO;
+import com.unic.sapcc.toolkit.enums.CloudEnvironment;
+import com.unic.sapcc.toolkit.enums.DatabaseUpdateMode;
+import com.unic.sapcc.toolkit.enums.DeployStrategy;
+import com.unic.sapcc.toolkit.services.impl.DefaultCloudBuildService;
+import com.unic.sapcc.toolkit.services.impl.DefaultCloudDeploymentService;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
@@ -24,19 +27,13 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.core.env.Environment;
 import org.springframework.web.client.RestTemplate;
 
-import com.unic.sapcc.toolkit.dto.DeploymentRequestDTO;
-import com.unic.sapcc.toolkit.enums.CloudEnvironment;
-import com.unic.sapcc.toolkit.enums.DatabaseUpdateMode;
-import com.unic.sapcc.toolkit.enums.DeployStrategy;
-import com.unic.sapcc.toolkit.services.impl.DefaultCloudBuildService;
-import com.unic.sapcc.toolkit.services.impl.DefaultCloudDeploymentService;
-
+import java.time.Duration;
+import java.time.LocalDate;
 
 @Profile("!test")
 @SpringBootApplication
 @ComponentScan(basePackages = "com.unic.sapcc.toolkit")
-public class ToolkitApplication implements CommandLineRunner
-{
+public class ToolkitApplication implements CommandLineRunner {
 
 	private static final Logger LOG = LoggerFactory.getLogger(ToolkitApplication.class);
 	public static final String SHORTOPTION_BUILD = "b";
@@ -63,38 +60,31 @@ public class ToolkitApplication implements CommandLineRunner
 	private ConfigurableApplicationContext applicationContext;
 
 	@Bean
-	public RestTemplate restTemplate(RestTemplateBuilder builder)
-	{
+	public RestTemplate restTemplate(RestTemplateBuilder builder) {
 		return builder.setConnectTimeout(Duration.ofMillis(3000)).setReadTimeout(Duration.ofMillis(3000)).build();
 	}
 
-	public static void main(String[] args) throws Exception
-	{
+	public static void main(String[] args) throws Exception {
 		SpringApplication.run(ToolkitApplication.class, args);
 	}
 
 	@Override
-	public void run(String... args) throws Exception
-	{
+	public void run(String... args) throws Exception {
 		CommandLine cmd = getCommandLine(buildOptions(), args);
 
-		if (!(cmd.hasOption(SHORTOPTION_BUILD) || cmd.hasOption(SHORTOPTION_DEPLOY)))
-		{
+		if (!(cmd.hasOption(SHORTOPTION_BUILD) || cmd.hasOption(SHORTOPTION_DEPLOY))) {
 			LOG.error("No action selected! Start the tool with either the '-" + SHORTOPTION_BUILD + "' or  '-" + SHORTOPTION_DEPLOY
 					+ "' flag.");
 		}
 
 		String buildCode = null;
-		if (cmd.hasOption(SHORTOPTION_BUILD))
-		{
+		if (cmd.hasOption(SHORTOPTION_BUILD)) {
 			buildCode = createBuild(cmd);
 			watchBuildProgress(buildCode);
 		}
 
-		if (cmd.hasOption(SHORTOPTION_DEPLOY))
-		{
-			if (!cmd.hasOption(SHORTOPTION_BUILD))
-			{
+		if (cmd.hasOption(SHORTOPTION_DEPLOY)) {
+			if (!cmd.hasOption(SHORTOPTION_BUILD)) {
 				buildCode = cmd.getOptionValue(SHORTOPTION_BUILDCODE);
 				watchBuildProgress(buildCode);
 			}
@@ -105,21 +95,16 @@ public class ToolkitApplication implements CommandLineRunner
 		applicationContext.close();
 	}
 
-	private CommandLine getCommandLine(final Options options, final String[] args) throws ParseException
-	{
+	private CommandLine getCommandLine(final Options options, final String[] args) throws ParseException {
 		CommandLineParser parser = new DefaultParser();
 		CommandLine cmd = null;
-		try
-		{
+		try {
 			cmd = parser.parse(options, args);
-			if (args.length == 0 || cmd.hasOption(SHORTOPTION_HELP))
-			{
+			if (args.length == 0 || cmd.hasOption(SHORTOPTION_HELP)) {
 				printHelp(options);
 				System.exit(0);
 			}
-		}
-		catch (MissingOptionException moe)
-		{
+		} catch (MissingOptionException moe) {
 			printHelp(options);
 			System.err.println(moe.getMessage());
 			System.exit(1);
@@ -127,14 +112,12 @@ public class ToolkitApplication implements CommandLineRunner
 		return cmd;
 	}
 
-	private void printHelp(final Options options)
-	{
+	private void printHelp(final Options options) {
 		HelpFormatter formatter = new HelpFormatter();
 		formatter.printHelp("sapcc-toolkit", options);
 	}
 
-	private static Options buildOptions()
-	{
+	private static Options buildOptions() {
 		Options options = new Options();
 		options.addOption(SHORTOPTION_HELP, "help", false, "print usage help");
 
@@ -152,8 +135,7 @@ public class ToolkitApplication implements CommandLineRunner
 		return options;
 	}
 
-	private String createBuild(CommandLine cmd)
-	{
+	private String createBuild(CommandLine cmd) {
 		LOG.info("Build will be started");
 
 		String applicationCode = cmd.getOptionValue(SHOROPTION_APPCODE, "");
@@ -163,8 +145,7 @@ public class ToolkitApplication implements CommandLineRunner
 		return cloudBuildService.createBuild(applicationCode, buildBranch, buildName);
 	}
 
-	private String createDeployment(String buildCode, CommandLine cmd)
-	{
+	private String createDeployment(String buildCode, CommandLine cmd) {
 		CloudEnvironment deployEnvironment = CloudEnvironment.valueOf(cmd.getOptionValue(SHORTOPTION_ENV, "d1"));
 		DatabaseUpdateMode dbUpdateMode = DatabaseUpdateMode.valueOf(cmd.getOptionValue(SHORTOPTION_MODE, "NONE"));
 		DeployStrategy deployStrategy = DeployStrategy.valueOf(cmd.getOptionValue(SHORTOPTION_STRATEGY, "ROLLING_UPDATE"));
@@ -175,31 +156,22 @@ public class ToolkitApplication implements CommandLineRunner
 		return cloudDeploymentService.createDeployment(deploymentRequestDTO);
 	}
 
-	private void watchBuildProgress(final String buildCode)
-	{
+	private void watchBuildProgress(final String buildCode) {
 		LOG.info("Build progress will be watched: " + buildCode);
-		try
-		{
+		try {
 			cloudBuildService.handleBuildProgress(buildCode);
-		}
-		catch (InterruptedException | IllegalStateException e)
-		{
+		} catch (InterruptedException | IllegalStateException e) {
 			LOG.error("Error during build watching progress", e);
 			System.exit(1);
 		}
 	}
 
-	private void watchDeploymentProgress(final String deploymentCode)
-	{
-		try
-		{
+	private void watchDeploymentProgress(final String deploymentCode) {
+		try {
 			cloudDeploymentService.handleDeploymentProgress(deploymentCode);
-		}
-		catch (InterruptedException | IllegalStateException e)
-		{
+		} catch (InterruptedException | IllegalStateException e) {
 			LOG.error("Error during deployment watching progress", e);
 			System.exit(1);
 		}
 	}
-
 }
