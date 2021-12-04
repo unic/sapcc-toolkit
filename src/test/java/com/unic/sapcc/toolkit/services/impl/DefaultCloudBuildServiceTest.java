@@ -29,8 +29,8 @@ import org.springframework.web.client.RestTemplate;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -49,7 +49,7 @@ class DefaultCloudBuildServiceTest {
 	private ArgumentCaptor<HttpEntity<BuildRequestDTO>> entityCaptor;
 
 	@InjectMocks
-	private CloudBuildService unitUnderTest = new DefaultCloudBuildService();
+	private DefaultCloudBuildService unitUnderTest;
 
 	private final static String fakeSubscriptionId = "abcd1234";
 	private final static String baseurl = "https://portalrotapi.hana.ondemand.com/v2/subscriptions/" + fakeSubscriptionId;
@@ -67,13 +67,14 @@ class DefaultCloudBuildServiceTest {
 		String url = "https://portalrotapi.hana.ondemand.com/v2/subscriptions/" + fakeSubscriptionId + "/builds";
 
 		when(restTemplate.exchange(eq(url), eq(HttpMethod.POST), any(HttpEntity.class), eq(BuildResponseDTO.class))).thenReturn(
-				new ResponseEntity(null, HttpStatus.OK));
+				new ResponseEntity<>(null, HttpStatus.OK));
 
 		unitUnderTest.createBuild(appCode, branch, name);
 
 		verify(restTemplate).exchange(eq(url), eq(HttpMethod.POST), entityCaptor.capture(), eq(BuildResponseDTO.class));
 
 		BuildRequestDTO body = entityCaptor.getValue().getBody();
+		assertNotNull(body);
 		assertEquals(appCode, body.applicationCode());
 		assertEquals(branch, body.branch());
 		assertEquals(name, body.name());
@@ -87,7 +88,7 @@ class DefaultCloudBuildServiceTest {
 		BuildResponseDTO buildResponseDTO = new BuildResponseDTO(fakeSubscriptionId, buildCode);
 
 		when(restTemplate.exchange(eq(url), eq(HttpMethod.POST), any(HttpEntity.class), eq(BuildResponseDTO.class))).thenReturn(
-				new ResponseEntity(buildResponseDTO, HttpStatus.OK));
+				new ResponseEntity<>(buildResponseDTO, HttpStatus.OK));
 
 		String response = unitUnderTest.createBuild("", "", "");
 		assertEquals(buildCode, response);
@@ -101,7 +102,7 @@ class DefaultCloudBuildServiceTest {
 		String url = "https://portalrotapi.hana.ondemand.com/v2/subscriptions/" + fakeSubscriptionId + "/builds";
 
 		when(restTemplate.exchange(eq(url), eq(HttpMethod.POST), any(HttpEntity.class), eq(BuildResponseDTO.class))).thenReturn(
-				new ResponseEntity(null, HttpStatus.OK));
+				new ResponseEntity<>(null, HttpStatus.OK));
 
 		String response = unitUnderTest.createBuild("", "", "");
 		assertNull(response);
@@ -113,7 +114,7 @@ class DefaultCloudBuildServiceTest {
 		}
 
 		@Override
-		public Stream<? extends Arguments> provideArguments(final ExtensionContext context) throws Exception {
+		public Stream<? extends Arguments> provideArguments(final ExtensionContext context) {
 			return Stream.of(Arguments.of(buildBuildProgressDto("SUCCESS"), BuildStatus.SUCCESS),
 					Arguments.of(buildBuildProgressDto("BUILDING"), BuildStatus.BUILDING),
 					Arguments.of(buildBuildProgressDto("ERROR"), BuildStatus.ERROR),
@@ -137,10 +138,12 @@ class DefaultCloudBuildServiceTest {
 		final BuildProgressDTO buildProgressDTO = new BuildProgressDTO("", "", "", 0, 0, "SUCCESS", null);
 
 		when(restTemplate.exchange(eq(url), eq(HttpMethod.GET), any(HttpEntity.class), eq(BuildProgressDTO.class))).thenReturn(
-				new ResponseEntity(buildProgressDTO, HttpStatus.OK));
+				new ResponseEntity<>(buildProgressDTO, HttpStatus.OK));
 		when(env.getProperty(eq("toolkit.build.sleepTime"), anyString())).thenReturn("5");
 		when(env.getProperty(eq("toolkit.build.maxWaitTime"), anyString())).thenReturn("30");
 
 		unitUnderTest.handleBuildProgress(buildCode);
+
+		verify(restTemplate).exchange(eq(url), eq(HttpMethod.GET), any(HttpEntity.class), eq(BuildProgressDTO.class));
 	}
 }

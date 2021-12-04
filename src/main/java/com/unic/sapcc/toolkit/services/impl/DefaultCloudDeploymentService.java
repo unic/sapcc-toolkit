@@ -10,7 +10,6 @@ import com.unic.sapcc.toolkit.enums.DeploymentStatus;
 import com.unic.sapcc.toolkit.services.CloudDeploymentService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
 import org.springframework.http.HttpEntity;
@@ -25,25 +24,32 @@ import java.util.concurrent.TimeUnit;
 @Service
 public class DefaultCloudDeploymentService extends AbstractCloudService implements CloudDeploymentService {
 
-	private final static Logger LOG = LoggerFactory.getLogger(DefaultCloudDeploymentService.class);
+	private static final Logger LOG = LoggerFactory.getLogger(DefaultCloudDeploymentService.class);
 
-	@Autowired
-	public RestTemplate restTemplate;
+	public final RestTemplate restTemplate;
 
-	@Autowired
-	public Environment env;
+	public final Environment env;
 
 	@Value("${toolkit.subscriptionCode}")
 	private String subscriptionCode;
 
+	public DefaultCloudDeploymentService(RestTemplate restTemplate, Environment env) {
+		this.restTemplate = restTemplate;
+		this.env = env;
+	}
+
 	@Override
 	public String createDeployment(DeploymentRequestDTO deploymentRequestDTO) {
-		LOG.info("Starting deployment with requestDTO: " + deploymentRequestDTO);
+		LOG.info("Starting deployment with requestDTO: {}", deploymentRequestDTO);
 		HttpEntity<DeploymentRequestDTO> entity = prepareHttpEntity(deploymentRequestDTO);
 		ResponseEntity<DeploymentResponseDTO> createDeploymentEntity = restTemplate.exchange(
-				"https://portalrotapi.hana.ondemand.com/v2/subscriptions/" + subscriptionCode + "/deployments", HttpMethod.POST, entity,
+				PORTAL_API + subscriptionCode + "/deployments",
+				HttpMethod.POST,
+				entity,
 				DeploymentResponseDTO.class);
-
+		if(createDeploymentEntity.getBody() == null){
+			throw new IllegalStateException();
+		}
 		return createDeploymentEntity.getBody().code();
 	}
 
@@ -52,28 +58,29 @@ public class DefaultCloudDeploymentService extends AbstractCloudService implemen
 			CloudEnvironment deployEnvironmentCode, DeployStrategy deployStrategy) {
 		DeploymentRequestDTO deploymentRequestDTO = new DeploymentRequestDTO(buildCode, deployDatabaseUpdateMode, deployEnvironmentCode,
 				deployStrategy);
-		LOG.info("New Deployment Request DTO created: " + deploymentRequestDTO);
+		LOG.info("New Deployment Request DTO created: {}", deploymentRequestDTO);
 		return deploymentRequestDTO;
 	}
 
 	@Override
-	public void handleDeploymentProgress(String deploymentCode) throws InterruptedException, IllegalStateException
-	{
+	public void handleDeploymentProgress(String deploymentCode) throws InterruptedException, IllegalStateException {
 		long startTime = System.currentTimeMillis();
 
 		long sleepTime = Long.parseLong(env.getProperty("toolkit.deploy.sleepTime", "5"));
 		long maxWaitTime = Long.parseLong(env.getProperty("toolkit.deploy.maxWaitTime", "30"));
-		LOG.info(String.format("Deployment will be watched with polling rate of %d sec and max wait time of %d min", sleepTime, maxWaitTime));
+		LOG.info("Deployment will be watched with polling rate of {} sec and max wait time of {} min", sleepTime,
+				maxWaitTime);
 
 		while (true) {
 			if (startTime + maxWaitTime * 1000 * 60 < System.currentTimeMillis()) {
-				throw new IllegalStateException("Maximium waiting time of " + maxWaitTime + " seconds reached. Aborting deployment progress watching process.");
+				throw new IllegalStateException(
+						"Maximum waiting time of " + maxWaitTime + " seconds reached. Aborting deployment progress watching process.");
 			}
 			DeploymentProgressDTO deploymentProgress = getDeploymentProgress(deploymentCode);
 			if (deploymentProgress != null) {
-				LOG.info("Deployment progress (%): " + deploymentProgress.percentage());
+				LOG.info("Deployment progress {}%", deploymentProgress.percentage());
 				if (DeploymentStatus.DEPLOYED.equals(deploymentProgress.deploymentStatus())) {
-					LOG.info("Deployment progress: " + DeploymentStatus.DEPLOYED);
+					LOG.info("Deployment progress: {}", DeploymentStatus.DEPLOYED);
 					return;
 				}
 			}
@@ -83,13 +90,15 @@ public class DefaultCloudDeploymentService extends AbstractCloudService implemen
 	}
 
 	private DeploymentProgressDTO getDeploymentProgress(String deploymentCode) {
-		LOG.info("Retrieving deployment progress for deploymentCode: " + deploymentCode);
-		HttpEntity entity = prepareHttpEntity(null);
+		LOG.info("Retrieving deployment progress for deploymentCode: {}", deploymentCode);
+		HttpEntity<?> entity = prepareHttpEntity(null);
 		ResponseEntity<DeploymentProgressDTO> deploymentProgressEntity;
 		try {
 			deploymentProgressEntity = restTemplate.exchange(
-					"https://portalrotapi.hana.ondemand.com/v2/subscriptions/" + subscriptionCode + "/deployments/" + deploymentCode
-							+ "/progress", HttpMethod.GET, entity, DeploymentProgressDTO.class);
+					PORTAL_API + subscriptionCode + "/deployments/" + deploymentCode + "/progress",
+					HttpMethod.GET,
+					entity,
+					DeploymentProgressDTO.class);
 		} catch (ResourceAccessException raex) {
 			LOG.error(raex.getMessage());
 			return null;

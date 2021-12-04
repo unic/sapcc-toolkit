@@ -16,25 +16,27 @@ public interface CloudDeploymentService {
 	 * @param deploymentRequestDTO
 	 * @return the newly created deploymentCode
 	 */
-	public String createDeployment(DeploymentRequestDTO deploymentRequestDTO);
+	String createDeployment(DeploymentRequestDTO deploymentRequestDTO);
 
 	/**
 	 * Create a new DeploymentRequestDTO which wraps important deployment parameters needed to create a new deployment.
+	 *
 	 * @param buildCode
 	 * @param deployDatabaseUpdateMode
 	 * @param deployEnvironmentCode
 	 * @param deployStrategy
 	 * @return
 	 */
-	public DeploymentRequestDTO createDeploymentRequestDTO(String buildCode, DatabaseUpdateMode deployDatabaseUpdateMode,
+	DeploymentRequestDTO createDeploymentRequestDTO(String buildCode, DatabaseUpdateMode deployDatabaseUpdateMode,
 			CloudEnvironment deployEnvironmentCode, DeployStrategy deployStrategy);
 
 	/**
 	 * Monitor the deployment progress for the given deploymentCode for a maximum time of ${toolkit.deploy.maxWaitTime}.
 	 * Progress will be updated for the given interval ${toolkit.deploy.sleepTime}.
+	 *
 	 * @param deploymentCode
 	 * @throws InterruptedException
 	 * @throes IllegalStateException
 	 */
-	public void handleDeploymentProgress(String deploymentCode) throws InterruptedException, IllegalStateException;
+	void handleDeploymentProgress(String deploymentCode) throws InterruptedException, IllegalStateException;
 }
