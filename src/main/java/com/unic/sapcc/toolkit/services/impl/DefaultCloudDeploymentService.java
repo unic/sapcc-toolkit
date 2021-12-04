@@ -1,6 +1,5 @@
 package com.unic.sapcc.toolkit.services.impl;
 
-import com.unic.sapcc.toolkit.dto.BodyDTO;
 import com.unic.sapcc.toolkit.dto.DeploymentProgressDTO;
 import com.unic.sapcc.toolkit.dto.DeploymentRequestDTO;
 import com.unic.sapcc.toolkit.dto.DeploymentResponseDTO;
@@ -40,12 +39,12 @@ public class DefaultCloudDeploymentService extends AbstractCloudService implemen
 	@Override
 	public String createDeployment(DeploymentRequestDTO deploymentRequestDTO) {
 		LOG.info("Starting deployment with requestDTO: " + deploymentRequestDTO);
-		HttpEntity<BodyDTO> entity = prepareHttpEntity(deploymentRequestDTO);
+		HttpEntity<DeploymentRequestDTO> entity = prepareHttpEntity(deploymentRequestDTO);
 		ResponseEntity<DeploymentResponseDTO> createDeploymentEntity = restTemplate.exchange(
 				"https://portalrotapi.hana.ondemand.com/v2/subscriptions/" + subscriptionCode + "/deployments", HttpMethod.POST, entity,
 				DeploymentResponseDTO.class);
 
-		return createDeploymentEntity.getBody().getCode();
+		return createDeploymentEntity.getBody().code();
 	}
 
 	@Override
@@ -72,8 +71,8 @@ public class DefaultCloudDeploymentService extends AbstractCloudService implemen
 			}
 			DeploymentProgressDTO deploymentProgress = getDeploymentProgress(deploymentCode);
 			if (deploymentProgress != null) {
-				LOG.info("Deployment progress (%): " + deploymentProgress.getPercentage());
-				if (DeploymentStatus.DEPLOYED.equals(deploymentProgress.getDeploymentStatus())) {
+				LOG.info("Deployment progress (%): " + deploymentProgress.percentage());
+				if (DeploymentStatus.DEPLOYED.equals(deploymentProgress.deploymentStatus())) {
 					LOG.info("Deployment progress: " + DeploymentStatus.DEPLOYED);
 					return;
 				}
@@ -85,7 +84,7 @@ public class DefaultCloudDeploymentService extends AbstractCloudService implemen
 
 	private DeploymentProgressDTO getDeploymentProgress(String deploymentCode) {
 		LOG.info("Retrieving deployment progress for deploymentCode: " + deploymentCode);
-		HttpEntity<BodyDTO> entity = prepareHttpEntity(null);
+		HttpEntity entity = prepareHttpEntity(null);
 		ResponseEntity<DeploymentProgressDTO> deploymentProgressEntity;
 		try {
 			deploymentProgressEntity = restTemplate.exchange(

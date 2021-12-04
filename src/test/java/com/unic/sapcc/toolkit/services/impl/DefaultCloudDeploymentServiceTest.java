@@ -97,10 +97,10 @@ class DefaultCloudDeploymentServiceTest {
 		DeploymentRequestDTO deploymentRequestDTO = unitUnderTest.createDeploymentRequestDTO(buildCode, databaseUpdateMode,
 				deployEnvironmentCode, deployStrategy);
 
-		assertEquals(buildCode, deploymentRequestDTO.getBuildCode());
-		assertEquals(databaseUpdateMode, deploymentRequestDTO.getDatabaseUpdateMode());
-		assertEquals(deployEnvironmentCode, deploymentRequestDTO.getEnvironmentCode());
-		assertEquals(deployStrategy, deploymentRequestDTO.getStrategy());
+		assertEquals(buildCode, deploymentRequestDTO.buildCode());
+		assertEquals(databaseUpdateMode, deploymentRequestDTO.databaseUpdateMode());
+		assertEquals(deployEnvironmentCode, deploymentRequestDTO.environmentCode());
+		assertEquals(deployStrategy, deploymentRequestDTO.strategy());
 	}
 
 	@Test
@@ -116,5 +116,6 @@ class DefaultCloudDeploymentServiceTest {
 		when(env.getProperty(eq("toolkit.deploy.maxWaitTime"), anyString())).thenReturn("30");
 
 		unitUnderTest.handleDeploymentProgress(deploymentCode);
+
 	}
 }

@@ -74,9 +74,9 @@ class DefaultCloudBuildServiceTest {
 		verify(restTemplate).exchange(eq(url), eq(HttpMethod.POST), entityCaptor.capture(), eq(BuildResponseDTO.class));
 
 		BuildRequestDTO body = entityCaptor.getValue().getBody();
-		assertEquals(appCode, body.getApplicationCode());
-		assertEquals(branch, body.getBranch());
-		assertEquals(name, body.getName());
+		assertEquals(appCode, body.applicationCode());
+		assertEquals(branch, body.branch());
+		assertEquals(name, body.name());
 	}
 
 	@Test

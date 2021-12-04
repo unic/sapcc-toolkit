@@ -1,6 +1,5 @@
 package com.unic.sapcc.toolkit.services.impl;
 
-import com.unic.sapcc.toolkit.dto.BodyDTO;
 import com.unic.sapcc.toolkit.dto.BuildProgressDTO;
 import com.unic.sapcc.toolkit.dto.BuildRequestDTO;
 import com.unic.sapcc.toolkit.dto.BuildResponseDTO;
@@ -44,7 +43,7 @@ public class DefaultCloudBuildService extends AbstractCloudService implements Cl
 	@Override
 	public String createBuild(BuildRequestDTO buildRequestDTO) {
 		LOG.info("Create Build with params: " + buildRequestDTO);
-		HttpEntity<BodyDTO> entity = prepareHttpEntity(buildRequestDTO);
+		HttpEntity entity = prepareHttpEntity(buildRequestDTO);
 		try {
 			ResponseEntity<BuildResponseDTO> createdBuildEntity = restTemplate.exchange(
 					"https://portalrotapi.hana.ondemand.com/v2/subscriptions/" + subscriptionCode + "/builds", HttpMethod.POST, entity,
@@ -52,8 +51,8 @@ public class DefaultCloudBuildService extends AbstractCloudService implements Cl
 
 			if (createdBuildEntity.getBody() != null) {
 				BuildResponseDTO buildResponseDTO = createdBuildEntity.getBody();
-				LOG.info("Build created with buildCode: " + buildResponseDTO.getCode());
-				return buildResponseDTO.getCode();
+				LOG.info("Build created with buildCode: " + buildResponseDTO.code());
+				return buildResponseDTO.code();
 			}
 		} catch (HttpClientErrorException hce) {
 			LOG.error("Error during build creation", hce);
@@ -64,13 +63,13 @@ public class DefaultCloudBuildService extends AbstractCloudService implements Cl
 	@Override
 	public BuildStatus verifyBuildProgress(BuildProgressDTO buildProgressDTO) {
 		LOG.debug("Verify build progress: " + buildProgressDTO);
-		if (BuildStatus.ERROR.name().equals(buildProgressDTO.getBuildStatus())) {
+		if (BuildStatus.ERROR.name().equals(buildProgressDTO.buildStatus())) {
 			return BuildStatus.ERROR;
 		}
-		if (BuildStatus.BUILDING.name().equals(buildProgressDTO.getBuildStatus())) {
+		if (BuildStatus.BUILDING.name().equals(buildProgressDTO.buildStatus())) {
 			return BuildStatus.BUILDING;
 		}
-		if (BuildStatus.SUCCESS.name().equals(buildProgressDTO.getBuildStatus())) {
+		if (BuildStatus.SUCCESS.name().equals(buildProgressDTO.buildStatus())) {
 			return BuildStatus.SUCCESS;
 		}
 		return BuildStatus.UNKNOWN;
@@ -89,7 +88,7 @@ public class DefaultCloudBuildService extends AbstractCloudService implements Cl
 				throw new IllegalStateException("Maximium waiting time of " + maxWaitTime + " minutes reached. Aborting build progress watching process.");
 			}
 			BuildProgressDTO buildProgress = getBuildProgress(buildCode);
-			LOG.info("Build progress (%): " + buildProgress.getPercentage());
+			LOG.info("Build progress (%): " + buildProgress.percentage());
 			if (BuildStatus.SUCCESS == verifyBuildProgress(buildProgress)) {
 				LOG.info("Build status: " + BuildStatus.SUCCESS);
 				return ;
@@ -100,7 +99,7 @@ public class DefaultCloudBuildService extends AbstractCloudService implements Cl
 
 	private BuildProgressDTO getBuildProgress(String buildCode) {
 		LOG.info("Retrieving build progress for buildCode: " + buildCode);
-		HttpEntity<BodyDTO> entity = prepareHttpEntity(null);
+		HttpEntity entity = prepareHttpEntity(null);
 		ResponseEntity<BuildProgressDTO> buildProgressEntity = null;
 		try {
 			buildProgressEntity = restTemplate.exchange(
