@@ -64,7 +64,7 @@ public class ToolkitApplication implements CommandLineRunner {
 		return builder.setConnectTimeout(Duration.ofMillis(3000)).setReadTimeout(Duration.ofMillis(3000)).build();
 	}
 
-	public static void main(String[] args) throws Exception {
+	public static void main(String[] args) {
 		SpringApplication.run(ToolkitApplication.class, args);
 	}
 

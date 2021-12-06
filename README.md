@@ -2,7 +2,7 @@
 This CLI toolkit provides functionalities to create and monitor builds and deployments within the SAP Commerce Cloud.
 
 ## Setup
-To setup your SAP CC CLI Toolkit please provide your:
+To set up your SAP CC CLI Toolkit please provide your:
 - SAP Commerce Cloud Subscription Code
 - SAP Commerce Cloud API token/key
 - Define a maximum waiting time in minutes for builds (default: 30min)
@@ -21,10 +21,6 @@ toolkit.build.sleepTime = <insert your polling/interval rate for build progress 
 
 toolkit.deploy.maxWaitTime = <insert your maximum waiting time in minutes for deployments here>
 toolkit.deploy.sleepTime= <insert your polling/interval rate in seconds for build progress here>
-
-toolkit.deploy.environment = <insert your preferred deploy environment d1,s1 here>
-toolkit.deploy.dbUpdateMode = <insert your preferred database update mode for deployments here>
-toolkit.deploy.strategy = <insert your preferred deployment strategy here>
 ```
 
 ## Building

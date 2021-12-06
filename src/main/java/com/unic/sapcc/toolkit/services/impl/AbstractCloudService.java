@@ -1,6 +1,5 @@
 package com.unic.sapcc.toolkit.services.impl;
 
-import com.unic.sapcc.toolkit.dto.BodyDTO;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -10,14 +9,14 @@ import org.springframework.stereotype.Service;
 @Service
 public abstract class AbstractCloudService {
 
+	public static final String PORTAL_API = "https://portalrotapi.hana.ondemand.com/v2/subscriptions/";
 	@Value("${toolkit.apiKey}")
 	private String apiKey;
 
-	public HttpEntity<BodyDTO> prepareHttpEntity(BodyDTO bodyDTO) {
+	public <T>  HttpEntity<T> prepareHttpEntity(T bodyDTO) {
 		HttpHeaders headers = new HttpHeaders();
 		headers.setContentType(MediaType.APPLICATION_JSON);
 		headers.setBearerAuth(apiKey);
-		HttpEntity<BodyDTO> entity = new HttpEntity<BodyDTO>(bodyDTO, headers);
-		return entity;
+		return new HttpEntity<>(bodyDTO, headers);
 	}
 }

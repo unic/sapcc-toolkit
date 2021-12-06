@@ -17,7 +17,7 @@ public interface CloudBuildService {
 	 * @param name
 	 * @return the newly created buildCode as String
 	 */
-	public String createBuild(String applicationCode, String branch, String name);
+	String createBuild(String applicationCode, String branch, String name);
 
 	/**
 	 * Create a new build for the build parameters wrapped in BuildRequestDTO.
@@ -25,7 +25,7 @@ public interface CloudBuildService {
 	 * @param buildRequestDTO
 	 * @return the newly created buildCode as String
 	 */
-	public String createBuild(BuildRequestDTO buildRequestDTO);
+	String createBuild(BuildRequestDTO buildRequestDTO);
 
 	/**
 	 * Verify the build progress for the build parameters wrapped in BuildProgressDTO.
@@ -33,7 +33,7 @@ public interface CloudBuildService {
 	 * @param buildProgressDTO
 	 * @return the current BuildStatus as enum
 	 */
-	public BuildStatus verifyBuildProgress(BuildProgressDTO buildProgressDTO);
+	BuildStatus verifyBuildProgress(BuildProgressDTO buildProgressDTO);
 
 	/**
 	 * Monitor the build progress for the given buildCode for a maximum time of ${toolkit.build.maxWaitTime}.
@@ -44,5 +44,5 @@ public interface CloudBuildService {
 	 * @throws InterruptedException
 	 * @throws IllegalStateException
 	 */
-	public void handleBuildProgress(String buildCode) throws InterruptedException, IllegalStateException;
+	void handleBuildProgress(String buildCode) throws InterruptedException, IllegalStateException;
 }
