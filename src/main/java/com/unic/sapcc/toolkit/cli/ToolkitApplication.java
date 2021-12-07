@@ -4,6 +4,8 @@ import com.unic.sapcc.toolkit.dto.DeploymentRequestDTO;
 import com.unic.sapcc.toolkit.enums.CloudEnvironment;
 import com.unic.sapcc.toolkit.enums.DatabaseUpdateMode;
 import com.unic.sapcc.toolkit.enums.DeployStrategy;
+import com.unic.sapcc.toolkit.services.CloudBuildService;
+import com.unic.sapcc.toolkit.services.CloudDeploymentService;
 import com.unic.sapcc.toolkit.services.impl.DefaultCloudBuildService;
 import com.unic.sapcc.toolkit.services.impl.DefaultCloudDeploymentService;
 import org.apache.commons.cli.CommandLine;
@@ -48,21 +50,16 @@ public class ToolkitApplication implements CommandLineRunner {
 	private static final String SHORTOPTION_HELP = "h";
 
 	@Autowired
-	public DefaultCloudBuildService cloudBuildService;
+	public CloudBuildService cloudBuildService;
 
 	@Autowired
-	public DefaultCloudDeploymentService cloudDeploymentService;
+	public CloudDeploymentService cloudDeploymentService;
 
 	@Autowired
 	public Environment env;
 
 	@Autowired
 	private ConfigurableApplicationContext applicationContext;
-
-	@Bean
-	public RestTemplate restTemplate(RestTemplateBuilder builder) {
-		return builder.setConnectTimeout(Duration.ofMillis(3000)).setReadTimeout(Duration.ofMillis(3000)).build();
-	}
 
 	public static void main(String[] args) {
 		SpringApplication.run(ToolkitApplication.class, args);
