@@ -8,8 +8,10 @@ import com.unic.sapcc.toolkit.enums.DatabaseUpdateMode;
 import com.unic.sapcc.toolkit.enums.DeployStrategy;
 import com.unic.sapcc.toolkit.enums.DeploymentStatus;
 import com.unic.sapcc.toolkit.services.CloudDeploymentService;
+import com.unic.sapcc.toolkit.services.NotificationService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
 import org.springframework.http.HttpEntity;
@@ -19,6 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 @Service
@@ -30,7 +33,10 @@ public class DefaultCloudDeploymentService extends AbstractCloudService implemen
 
 	public final Environment env;
 
-	@Value("${toolkit.subscriptionCode}")
+	@Autowired(required = false)
+	private Optional<NotificationService> notificationService;
+
+	@Value("${toolkit.subscriptionCode:#{null}}")
 	private String subscriptionCode;
 
 	public DefaultCloudDeploymentService(RestTemplate restTemplate, Environment env) {
@@ -42,15 +48,20 @@ public class DefaultCloudDeploymentService extends AbstractCloudService implemen
 	public String createDeployment(DeploymentRequestDTO deploymentRequestDTO) {
 		LOG.info("Starting deployment with requestDTO: {}", deploymentRequestDTO);
 		HttpEntity<DeploymentRequestDTO> entity = prepareHttpEntity(deploymentRequestDTO);
-		ResponseEntity<DeploymentResponseDTO> createDeploymentEntity = restTemplate.exchange(
-				PORTAL_API + subscriptionCode + "/deployments",
-				HttpMethod.POST,
-				entity,
-				DeploymentResponseDTO.class);
-		if(createDeploymentEntity.getBody() == null){
-			throw new IllegalStateException();
+		try {
+			ResponseEntity<DeploymentResponseDTO> createDeploymentEntity = restTemplate.exchange(
+					PORTAL_API + subscriptionCode + "/deployments",
+					HttpMethod.POST,
+					entity,
+					DeploymentResponseDTO.class);
+			if (createDeploymentEntity.getBody() == null) {
+				throw new IllegalStateException();
+			}
+			return createDeploymentEntity.getBody().code();
+		} catch (ResourceAccessException raex) {
+			LOG.error("Error while retrieving create-deployment response", raex);
 		}
-		return createDeploymentEntity.getBody().code();
+		return null;
 	}
 
 	@Override
@@ -79,8 +90,11 @@ public class DefaultCloudDeploymentService extends AbstractCloudService implemen
 			DeploymentProgressDTO deploymentProgress = getDeploymentProgress(deploymentCode);
 			if (deploymentProgress != null) {
 				LOG.info("Deployment progress {}%", deploymentProgress.percentage());
-				if (DeploymentStatus.DEPLOYED.equals(deploymentProgress.deploymentStatus())) {
+				if (DeploymentStatus.DEPLOYED.name().equals(deploymentProgress.deploymentStatus())) {
 					LOG.info("Deployment progress: {}", DeploymentStatus.DEPLOYED);
+					if (notificationService.isPresent()) {
+						notificationService.get().sendMessage(notificationService.get().formatMessageForDTO(deploymentProgress));
+					}
 					return;
 				}
 			}

@@ -5,6 +5,7 @@ import com.unic.sapcc.toolkit.dto.BuildRequestDTO;
 import com.unic.sapcc.toolkit.dto.BuildResponseDTO;
 import com.unic.sapcc.toolkit.enums.BuildStatus;
 import com.unic.sapcc.toolkit.services.CloudBuildService;
+import com.unic.sapcc.toolkit.services.NotificationService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +19,7 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 @Service
@@ -29,7 +31,10 @@ public class DefaultCloudBuildService extends AbstractCloudService implements Cl
 
 	public final Environment env;
 
-	@Value("${toolkit.subscriptionCode}")
+	@Autowired(required = false)
+	private Optional<NotificationService> notificationService;
+
+	@Value("${toolkit.subscriptionCode:#{null}}")
 	private String subscriptionCode;
 
 	public DefaultCloudBuildService(RestTemplate restTemplate, Environment env) {
@@ -67,21 +72,6 @@ public class DefaultCloudBuildService extends AbstractCloudService implements Cl
 	}
 
 	@Override
-	public BuildStatus verifyBuildProgress(BuildProgressDTO buildProgressDTO) {
-		LOG.debug("Verify build progress: {}", buildProgressDTO);
-		if (BuildStatus.ERROR.name().equals(buildProgressDTO.buildStatus())) {
-			return BuildStatus.ERROR;
-		}
-		if (BuildStatus.BUILDING.name().equals(buildProgressDTO.buildStatus())) {
-			return BuildStatus.BUILDING;
-		}
-		if (BuildStatus.SUCCESS.name().equals(buildProgressDTO.buildStatus())) {
-			return BuildStatus.SUCCESS;
-		}
-		return BuildStatus.UNKNOWN;
-	}
-
-	@Override
 	public void handleBuildProgress(String buildCode) throws InterruptedException {
 		long startTime = System.currentTimeMillis();
 
@@ -94,10 +84,17 @@ public class DefaultCloudBuildService extends AbstractCloudService implements Cl
 				throw new IllegalStateException(
 						"Maximum waiting time of " + maxWaitTime + " minutes reached. Aborting build progress watching process.");
 			}
+
 			BuildProgressDTO buildProgress = getBuildProgress(buildCode);
+			if (buildProgress == null) {
+				return;
+			}
 			LOG.info("Build progress: {} %", buildProgress.percentage());
-			if (BuildStatus.SUCCESS == verifyBuildProgress(buildProgress)) {
+			if (BuildStatus.SUCCESS.name().equals(buildProgress.buildStatus())) {
 				LOG.info("Build status: {}", BuildStatus.SUCCESS);
+				if (notificationService.isPresent()) {
+					notificationService.get().sendMessage(notificationService.get().formatMessageForDTO(buildProgress));
+				}
 				return;
 			}
 			TimeUnit.SECONDS.sleep(sleepTime);
@@ -105,7 +102,7 @@ public class DefaultCloudBuildService extends AbstractCloudService implements Cl
 	}
 
 	private BuildProgressDTO getBuildProgress(String buildCode) {
-		LOG.info("Retrieving build progress for buildCode '{}'" , buildCode);
+		LOG.info("Retrieving build progress for buildCode '{}'", buildCode);
 		HttpEntity<?> entity = prepareHttpEntity(null);
 		try {
 			ResponseEntity<BuildProgressDTO> buildProgressEntity = restTemplate.exchange(
@@ -119,7 +116,7 @@ public class DefaultCloudBuildService extends AbstractCloudService implements Cl
 			return buildProgressEntity.getBody();
 		} catch (ResourceAccessException raex) {
 			LOG.error(raex.getMessage(), raex);
-			throw new IllegalStateException(raex);
+			return null;
 		}
 	}
 }

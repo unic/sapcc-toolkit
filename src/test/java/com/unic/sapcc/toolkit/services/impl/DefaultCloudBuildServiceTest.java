@@ -4,15 +4,12 @@ import com.unic.sapcc.toolkit.dto.BuildProgressDTO;
 import com.unic.sapcc.toolkit.dto.BuildRequestDTO;
 import com.unic.sapcc.toolkit.dto.BuildResponseDTO;
 import com.unic.sapcc.toolkit.enums.BuildStatus;
-import com.unic.sapcc.toolkit.services.CloudBuildService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.ExtensionContext;
-import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.ArgumentsProvider;
-import org.junit.jupiter.params.provider.ArgumentsSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.InjectMocks;
@@ -39,20 +36,16 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class DefaultCloudBuildServiceTest {
-	@Mock
-	private Environment env;
-
-	@Mock
-	private RestTemplate restTemplate;
-
-	@Captor
-	private ArgumentCaptor<HttpEntity<BuildRequestDTO>> entityCaptor;
-
-	@InjectMocks
-	private DefaultCloudBuildService unitUnderTest;
-
 	private final static String fakeSubscriptionId = "abcd1234";
 	private final static String baseurl = "https://portalrotapi.hana.ondemand.com/v2/subscriptions/" + fakeSubscriptionId;
+	@Mock
+	private Environment env;
+	@Mock
+	private RestTemplate restTemplate;
+	@Captor
+	private ArgumentCaptor<HttpEntity<BuildRequestDTO>> entityCaptor;
+	@InjectMocks
+	private DefaultCloudBuildService unitUnderTest;
 
 	@BeforeEach
 	public void beforeEach() {
@@ -108,27 +101,6 @@ class DefaultCloudBuildServiceTest {
 		assertNull(response);
 	}
 
-	static class BuildProgressProvider implements ArgumentsProvider {
-		private BuildProgressDTO buildBuildProgressDto(final String status) {
-			return new BuildProgressDTO(null, null, null, 0, 0, status, null);
-		}
-
-		@Override
-		public Stream<? extends Arguments> provideArguments(final ExtensionContext context) {
-			return Stream.of(Arguments.of(buildBuildProgressDto("SUCCESS"), BuildStatus.SUCCESS),
-					Arguments.of(buildBuildProgressDto("BUILDING"), BuildStatus.BUILDING),
-					Arguments.of(buildBuildProgressDto("ERROR"), BuildStatus.ERROR),
-					Arguments.of(buildBuildProgressDto("UNDEFINED"), BuildStatus.UNKNOWN),
-					Arguments.of(buildBuildProgressDto("UNKNOWN"), BuildStatus.UNKNOWN));
-		}
-	}
-
-	@ParameterizedTest
-	@ArgumentsSource(BuildProgressProvider.class)
-	void verifyBuildProgress(BuildProgressDTO buildProgressDTO, BuildStatus expected) {
-		assertEquals(expected, unitUnderTest.verifyBuildProgress(buildProgressDTO));
-	}
-
 	@Test
 	void handleBuildProgress_Success() throws Exception {
 
@@ -145,5 +117,20 @@ class DefaultCloudBuildServiceTest {
 		unitUnderTest.handleBuildProgress(buildCode);
 
 		verify(restTemplate).exchange(eq(url), eq(HttpMethod.GET), any(HttpEntity.class), eq(BuildProgressDTO.class));
+	}
+
+	static class BuildProgressProvider implements ArgumentsProvider {
+		private BuildProgressDTO buildBuildProgressDto(final String status) {
+			return new BuildProgressDTO(null, null, null, 0, 0, status, null);
+		}
+
+		@Override
+		public Stream<? extends Arguments> provideArguments(final ExtensionContext context) {
+			return Stream.of(Arguments.of(buildBuildProgressDto("SUCCESS"), BuildStatus.SUCCESS),
+					Arguments.of(buildBuildProgressDto("BUILDING"), BuildStatus.BUILDING),
+					Arguments.of(buildBuildProgressDto("ERROR"), BuildStatus.ERROR),
+					Arguments.of(buildBuildProgressDto("UNDEFINED"), BuildStatus.UNKNOWN),
+					Arguments.of(buildBuildProgressDto("UNKNOWN"), BuildStatus.UNKNOWN));
+		}
 	}
 }

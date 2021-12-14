@@ -1,13 +1,13 @@
 package com.unic.sapcc.toolkit.cli;
 
+import com.unic.sapcc.toolkit.dto.BuildRequestDTO;
 import com.unic.sapcc.toolkit.dto.DeploymentRequestDTO;
 import com.unic.sapcc.toolkit.enums.CloudEnvironment;
 import com.unic.sapcc.toolkit.enums.DatabaseUpdateMode;
 import com.unic.sapcc.toolkit.enums.DeployStrategy;
 import com.unic.sapcc.toolkit.services.CloudBuildService;
 import com.unic.sapcc.toolkit.services.CloudDeploymentService;
-import com.unic.sapcc.toolkit.services.impl.DefaultCloudBuildService;
-import com.unic.sapcc.toolkit.services.impl.DefaultCloudDeploymentService;
+import com.unic.sapcc.toolkit.services.NotificationService;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
@@ -21,23 +21,18 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.context.ConfigurableApplicationContext;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Profile;
-import org.springframework.core.env.Environment;
-import org.springframework.web.client.RestTemplate;
 
-import java.time.Duration;
 import java.time.LocalDate;
+import java.util.Optional;
 
 @Profile("!test")
 @SpringBootApplication
 @ComponentScan(basePackages = "com.unic.sapcc.toolkit")
 public class ToolkitApplication implements CommandLineRunner {
 
-	private static final Logger LOG = LoggerFactory.getLogger(ToolkitApplication.class);
 	public static final String SHORTOPTION_BUILD = "b";
 	public static final String SHORTOPTION_DEPLOY = "d";
 	public static final String SHORTOPTION_BUILDCODE = "c";
@@ -47,6 +42,7 @@ public class ToolkitApplication implements CommandLineRunner {
 	public static final String SHORTOPTION_ENV = "e";
 	public static final String SHORTOPTION_MODE = "u";
 	public static final String SHORTOPTION_STRATEGY = "s";
+	private static final Logger LOG = LoggerFactory.getLogger(ToolkitApplication.class);
 	private static final String SHORTOPTION_HELP = "h";
 
 	@Autowired
@@ -56,13 +52,31 @@ public class ToolkitApplication implements CommandLineRunner {
 	public CloudDeploymentService cloudDeploymentService;
 
 	@Autowired
-	public Environment env;
-
-	@Autowired
 	private ConfigurableApplicationContext applicationContext;
+
+	@Autowired(required = false)
+	private Optional<NotificationService> notificationService;
 
 	public static void main(String[] args) {
 		SpringApplication.run(ToolkitApplication.class, args);
+	}
+
+	private static Options buildOptions() {
+		Options options = new Options();
+		options.addOption(SHORTOPTION_HELP, "help", false, "print usage help");
+
+		options.addOption(SHORTOPTION_BUILD, "build", false, "Execute build");
+		options.addOption(SHORTOPTION_DEPLOY, "deploy", false, "Execute deployment");
+		options.addOption(SHORTOPTION_BUILDCODE, "buildcode", true, "Code of build to deploy");
+
+		options.addOption(SHORTOPTION_ENV, "environment", true, "environment for deployment");
+		options.addOption(SHORTOPTION_MODE, "updatemode", true, "database update mode for deployment");
+		options.addOption(SHORTOPTION_STRATEGY, "strategy", true, "deployment strategy");
+
+		options.addOption(SHOROPTION_APPCODE, "applicationcode", true, "application code");
+		options.addOption(SHORTOPTION_BRANCH, "branch", true, "branch to be build");
+		options.addOption(SHORTOPTION_BUILDNAME, "name", true, "build name");
+		return options;
 	}
 
 	@Override
@@ -114,32 +128,18 @@ public class ToolkitApplication implements CommandLineRunner {
 		formatter.printHelp("sapcc-toolkit", options);
 	}
 
-	private static Options buildOptions() {
-		Options options = new Options();
-		options.addOption(SHORTOPTION_HELP, "help", false, "print usage help");
-
-		options.addOption(SHORTOPTION_BUILD, "build", false, "Execute build");
-		options.addOption(SHORTOPTION_DEPLOY, "deploy", false, "Execute deployment");
-		options.addOption(SHORTOPTION_BUILDCODE, "buildcode", true, "Code of build to deploy");
-
-		options.addOption(SHORTOPTION_ENV, "environment", true, "envrionment for deployment");
-		options.addOption(SHORTOPTION_MODE, "updatemode", true, "database update mode for deployment");
-		options.addOption(SHORTOPTION_STRATEGY, "strategy", true, "deployment strategy");
-
-		options.addOption(SHOROPTION_APPCODE, "applicationcode", true, "application code");
-		options.addOption(SHORTOPTION_BRANCH, "branch", true, "brannch to be build");
-		options.addOption(SHORTOPTION_BUILDNAME, "name", true, "build name");
-		return options;
-	}
-
 	private String createBuild(CommandLine cmd) {
 		LOG.info("Build will be started");
 
 		String applicationCode = cmd.getOptionValue(SHOROPTION_APPCODE, "");
 		String buildBranch = cmd.getOptionValue(SHORTOPTION_BRANCH, "develop");
 		String buildName = cmd.getOptionValue(SHORTOPTION_BUILDNAME, "develop-" + LocalDate.now());
+		BuildRequestDTO buildRequestDTO = new BuildRequestDTO(applicationCode, buildBranch, buildName);
 
-		return cloudBuildService.createBuild(applicationCode, buildBranch, buildName);
+		if (notificationService.isPresent()) {
+			notificationService.get().sendMessage(notificationService.get().formatMessageForDTO(buildRequestDTO));
+		}
+		return cloudBuildService.createBuild(buildRequestDTO);
 	}
 
 	private String createDeployment(String buildCode, CommandLine cmd) {
@@ -149,7 +149,9 @@ public class ToolkitApplication implements CommandLineRunner {
 
 		DeploymentRequestDTO deploymentRequestDTO = cloudDeploymentService.createDeploymentRequestDTO(buildCode, dbUpdateMode,
 				deployEnvironment, deployStrategy);
-
+		if (notificationService.isPresent()) {
+			notificationService.get().sendMessage(notificationService.get().formatMessageForDTO(deploymentRequestDTO));
+		}
 		return cloudDeploymentService.createDeployment(deploymentRequestDTO);
 	}
 
