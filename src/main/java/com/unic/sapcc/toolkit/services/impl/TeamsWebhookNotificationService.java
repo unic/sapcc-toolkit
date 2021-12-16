@@ -27,7 +27,7 @@ public class TeamsWebhookNotificationService extends AbstractCloudService implem
 	@Override
 	public void sendMessage(final String message) {
 		if (teamsWebhookUrl.isEmpty()) {
-			LOG.info("No Teams webhook URL defined. Notification skipped.");
+			LOG.debug("No Teams webhook URL defined. Notification skipped.");
 			return;
 		}
 
