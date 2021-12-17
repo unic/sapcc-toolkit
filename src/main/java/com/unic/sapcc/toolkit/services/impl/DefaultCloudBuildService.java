@@ -84,15 +84,15 @@ public class DefaultCloudBuildService extends AbstractCloudService implements Cl
 						"Maximum waiting time of " + maxWaitTime + " minutes reached. Aborting build progress watching process.");
 			}
 
-			BuildProgressDTO buildProgress = getBuildProgress(buildCode);
-			if (buildProgress == null) {
+			BuildProgressDTO buildProgressDTO = getBuildProgress(buildCode);
+			if (buildProgressDTO == null) {
 				return;
 			}
-			LOG.info("Build progress: {} %", buildProgress.percentage());
-			if (BuildStatus.SUCCESS.equals(buildProgress.buildStatus())) {
+			LOG.info("Build progress: {} %", buildProgressDTO.percentage());
+			if (BuildStatus.SUCCESS.equals(buildProgressDTO.buildStatus())) {
 				LOG.info("Build status: {}", BuildStatus.SUCCESS);
 				if (notificationService.isPresent()) {
-					notificationService.get().sendMessage(notificationService.get().formatMessageForDTO(buildProgress));
+					notificationService.get().sendMessage(buildProgressDTO);
 				}
 				return;
 			}

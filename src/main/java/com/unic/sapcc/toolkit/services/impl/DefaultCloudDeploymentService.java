@@ -81,13 +81,13 @@ public class DefaultCloudDeploymentService extends AbstractCloudService implemen
 				throw new IllegalStateException(
 						"Maximum waiting time of " + maxWaitTime + " seconds reached. Aborting deployment progress watching process.");
 			}
-			DeploymentProgressDTO deploymentProgress = getDeploymentProgress(deploymentCode);
-			if (deploymentProgress != null) {
-				LOG.info("Deployment progress {}%", deploymentProgress.percentage());
-				if (DeploymentStatus.DEPLOYED.equals(deploymentProgress.deploymentStatus())) {
+			DeploymentProgressDTO deploymentProgressDTO = getDeploymentProgress(deploymentCode);
+			if (deploymentProgressDTO != null) {
+				LOG.info("Deployment progress {}%", deploymentProgressDTO.percentage());
+				if (DeploymentStatus.DEPLOYED.equals(deploymentProgressDTO.deploymentStatus())) {
 					LOG.info("Deployment progress: {}", DeploymentStatus.DEPLOYED);
 					if (notificationService.isPresent()) {
-						notificationService.get().sendMessage(notificationService.get().formatMessageForDTO(deploymentProgress));
+						notificationService.get().sendMessage(deploymentProgressDTO);
 					}
 					return;
 				}

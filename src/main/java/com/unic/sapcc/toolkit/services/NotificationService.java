@@ -7,18 +7,10 @@ package com.unic.sapcc.toolkit.services;
 public interface NotificationService {
 
 	/**
-	 * The message you want to send through you notification provider.
-	 *
-	 * @param message
-	 */
-	void sendMessage(String message);
-
-	/**
-	 * Format the DTO Object in a readable structure for your notification provider.
+	 * Send the message as DTO through your notification provider.
 	 *
 	 * @param dto
 	 * @param <T>
-	 * @return
 	 */
-	<T> String formatMessageForDTO(T dto);
+	<T> void sendMessage(T dto);
 }

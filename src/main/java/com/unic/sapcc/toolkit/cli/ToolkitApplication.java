@@ -136,7 +136,7 @@ public class ToolkitApplication implements CommandLineRunner {
 		BuildRequestDTO buildRequestDTO = new BuildRequestDTO(applicationCode, buildBranch, buildName);
 
 		if (notificationService.isPresent()) {
-			notificationService.get().sendMessage(notificationService.get().formatMessageForDTO(buildRequestDTO));
+			notificationService.get().sendMessage(buildRequestDTO);
 		}
 		return cloudBuildService.createBuild(buildRequestDTO);
 	}
@@ -149,7 +149,7 @@ public class ToolkitApplication implements CommandLineRunner {
 		DeploymentRequestDTO deploymentRequestDTO = cloudDeploymentService.createDeploymentRequestDTO(buildCode, dbUpdateMode,
 				deployEnvironment, deployStrategy);
 		if (notificationService.isPresent()) {
-			notificationService.get().sendMessage(notificationService.get().formatMessageForDTO(deploymentRequestDTO));
+			notificationService.get().sendMessage(deploymentRequestDTO);
 		}
 		return cloudDeploymentService.createDeployment(deploymentRequestDTO);
 	}

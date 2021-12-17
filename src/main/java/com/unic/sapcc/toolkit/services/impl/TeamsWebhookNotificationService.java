@@ -25,17 +25,16 @@ public class TeamsWebhookNotificationService extends AbstractCloudService implem
 	private Optional<String> teamsWebhookUrl;
 
 	@Override
-	public void sendMessage(final String message) {
+	public <T> void sendMessage(T dto) {
 		if (teamsWebhookUrl.isEmpty()) {
 			LOG.debug("No Teams webhook URL defined. Notification skipped.");
 			return;
 		}
 
-		restTemplate.postForLocation(teamsWebhookUrl.get(), new TeamsNotificationRequestDTO(message));
+		restTemplate.postForLocation(teamsWebhookUrl.get(), new TeamsNotificationRequestDTO(formatMessageForDTO(dto)));
 	}
 
-	@Override
-	public <T> String formatMessageForDTO(T dto) {
+	private <T> String formatMessageForDTO(T dto) {
 		if (dto instanceof DeploymentRequestDTO) {
 			return "Deployment Request<br>" +
 					"BuildCode: " + ((DeploymentRequestDTO) dto).buildCode() + "<br>" +
