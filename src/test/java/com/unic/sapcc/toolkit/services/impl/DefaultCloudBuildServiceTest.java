@@ -7,9 +7,6 @@ import com.unic.sapcc.toolkit.enums.BuildStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.api.extension.ExtensionContext;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.ArgumentsProvider;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.InjectMocks;
@@ -22,8 +19,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.client.RestTemplate;
-
-import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -62,6 +57,7 @@ class DefaultCloudBuildServiceTest {
 		when(restTemplate.exchange(eq(url), eq(HttpMethod.POST), any(HttpEntity.class), eq(BuildResponseDTO.class))).thenReturn(
 				new ResponseEntity<>(null, HttpStatus.OK));
 
+		unitUnderTest.setNotificationService(null);
 		unitUnderTest.createBuild(appCode, branch, name);
 
 		verify(restTemplate).exchange(eq(url), eq(HttpMethod.POST), entityCaptor.capture(), eq(BuildResponseDTO.class));
@@ -83,6 +79,7 @@ class DefaultCloudBuildServiceTest {
 		when(restTemplate.exchange(eq(url), eq(HttpMethod.POST), any(HttpEntity.class), eq(BuildResponseDTO.class))).thenReturn(
 				new ResponseEntity<>(buildResponseDTO, HttpStatus.OK));
 
+		unitUnderTest.setNotificationService(null);
 		String response = unitUnderTest.createBuild("", "", "");
 		assertEquals(buildCode, response);
 	}
@@ -97,6 +94,7 @@ class DefaultCloudBuildServiceTest {
 		when(restTemplate.exchange(eq(url), eq(HttpMethod.POST), any(HttpEntity.class), eq(BuildResponseDTO.class))).thenReturn(
 				new ResponseEntity<>(null, HttpStatus.OK));
 
+		unitUnderTest.setNotificationService(null);
 		String response = unitUnderTest.createBuild("", "", "");
 		assertNull(response);
 	}
@@ -107,30 +105,16 @@ class DefaultCloudBuildServiceTest {
 		final String buildCode = "fakeBuildCode";
 		final String url = baseurl + "/builds/" + buildCode + "/progress";
 
-		final BuildProgressDTO buildProgressDTO = new BuildProgressDTO("", "", "", 0, 0, "SUCCESS", null);
+		final BuildProgressDTO buildProgressDTO = new BuildProgressDTO("", "", "", 0, 0, BuildStatus.SUCCESS, null);
 
 		when(restTemplate.exchange(eq(url), eq(HttpMethod.GET), any(HttpEntity.class), eq(BuildProgressDTO.class))).thenReturn(
 				new ResponseEntity<>(buildProgressDTO, HttpStatus.OK));
 		when(env.getProperty(eq("toolkit.build.sleepTime"), anyString())).thenReturn("5");
-		when(env.getProperty(eq("toolkit.build.maxWaitTime"), anyString())).thenReturn("30");
+		when(env.getProperty(eq("toolkit.build.maxWaitTime"), anyString())).thenReturn("1");
 
+		unitUnderTest.setNotificationService(null);
 		unitUnderTest.handleBuildProgress(buildCode);
 
 		verify(restTemplate).exchange(eq(url), eq(HttpMethod.GET), any(HttpEntity.class), eq(BuildProgressDTO.class));
-	}
-
-	static class BuildProgressProvider implements ArgumentsProvider {
-		private BuildProgressDTO buildBuildProgressDto(final String status) {
-			return new BuildProgressDTO(null, null, null, 0, 0, status, null);
-		}
-
-		@Override
-		public Stream<? extends Arguments> provideArguments(final ExtensionContext context) {
-			return Stream.of(Arguments.of(buildBuildProgressDto("SUCCESS"), BuildStatus.SUCCESS),
-					Arguments.of(buildBuildProgressDto("BUILDING"), BuildStatus.BUILDING),
-					Arguments.of(buildBuildProgressDto("ERROR"), BuildStatus.ERROR),
-					Arguments.of(buildBuildProgressDto("UNDEFINED"), BuildStatus.UNKNOWN),
-					Arguments.of(buildBuildProgressDto("UNKNOWN"), BuildStatus.UNKNOWN));
-		}
 	}
 }

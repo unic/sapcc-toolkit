@@ -21,7 +21,7 @@ public class TeamsWebhookNotificationService extends AbstractCloudService implem
 	@Autowired
 	private RestTemplate restTemplate;
 
-	@Value("${notification.teams.webhook.url:#{null}}")
+	@Value("${notification.teams.webhook.url}")
 	private Optional<String> teamsWebhookUrl;
 
 	@Override

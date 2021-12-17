@@ -54,7 +54,6 @@ public class ToolkitApplication implements CommandLineRunner {
 	@Autowired
 	private ConfigurableApplicationContext applicationContext;
 
-	@Autowired(required = false)
 	private Optional<NotificationService> notificationService;
 
 	public static void main(String[] args) {
@@ -172,5 +171,10 @@ public class ToolkitApplication implements CommandLineRunner {
 			LOG.error("Error during deployment watching progress", e);
 			System.exit(1);
 		}
+	}
+
+	@Autowired(required = false)
+	public void setNotificationService(NotificationService notificationService) {
+		this.notificationService = Optional.ofNullable(notificationService);
 	}
 }

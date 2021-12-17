@@ -1,5 +1,7 @@
 package com.unic.sapcc.toolkit.dto;
 
+import com.unic.sapcc.toolkit.enums.BuildStatus;
+
 import java.util.List;
 
 public record BuildProgressDTO(
@@ -8,6 +10,6 @@ public record BuildProgressDTO(
 		String errorMessage,
 		int numberOfTasks,
 		int percentage,
-		String buildStatus,
+		BuildStatus buildStatus,
 		List<BuildProgressStartedTaskDTO> startedTasks) {
 }

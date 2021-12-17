@@ -1,6 +1,6 @@
 package com.unic.sapcc.toolkit.config;
 
-import com.unic.sapcc.toolkit.conditions.TeamsWebhookCondition;
+import com.unic.sapcc.toolkit.conditions.TeamsWebhookNotificationCondition;
 import com.unic.sapcc.toolkit.services.NotificationService;
 import com.unic.sapcc.toolkit.services.impl.TeamsWebhookNotificationService;
 import org.springframework.boot.web.client.RestTemplateBuilder;
@@ -15,11 +15,11 @@ import java.time.Duration;
 public class ToolkitConfig {
 	@Bean
 	public RestTemplate restTemplate(RestTemplateBuilder builder) {
-		return builder.setConnectTimeout(Duration.ofMillis(3000)).setReadTimeout(Duration.ofMillis(3000)).build();
+		return builder.setConnectTimeout(Duration.ofMillis(10000)).setReadTimeout(Duration.ofMillis(10000)).build();
 	}
 
 	@Bean
-	@Conditional(TeamsWebhookCondition.class)
+	@Conditional(TeamsWebhookNotificationCondition.class)
 	public NotificationService getTeamsNotificationService() {
 		return new TeamsWebhookNotificationService();
 	}

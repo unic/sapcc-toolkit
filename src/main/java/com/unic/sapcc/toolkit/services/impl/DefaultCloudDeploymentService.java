@@ -18,7 +18,6 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.Optional;
@@ -33,7 +32,6 @@ public class DefaultCloudDeploymentService extends AbstractCloudService implemen
 
 	public final Environment env;
 
-	@Autowired(required = false)
 	private Optional<NotificationService> notificationService;
 
 	@Value("${toolkit.subscriptionCode:#{null}}")
@@ -48,20 +46,16 @@ public class DefaultCloudDeploymentService extends AbstractCloudService implemen
 	public String createDeployment(DeploymentRequestDTO deploymentRequestDTO) {
 		LOG.info("Starting deployment with requestDTO: {}", deploymentRequestDTO);
 		HttpEntity<DeploymentRequestDTO> entity = prepareHttpEntity(deploymentRequestDTO);
-		try {
-			ResponseEntity<DeploymentResponseDTO> createDeploymentEntity = restTemplate.exchange(
-					PORTAL_API + subscriptionCode + "/deployments",
-					HttpMethod.POST,
-					entity,
-					DeploymentResponseDTO.class);
-			if (createDeploymentEntity.getBody() == null) {
-				throw new IllegalStateException();
-			}
-			return createDeploymentEntity.getBody().code();
-		} catch (ResourceAccessException raex) {
-			LOG.error("Error while retrieving create-deployment response", raex);
+
+		ResponseEntity<DeploymentResponseDTO> createDeploymentEntity = restTemplate.exchange(
+				PORTAL_API + subscriptionCode + "/deployments",
+				HttpMethod.POST,
+				entity,
+				DeploymentResponseDTO.class);
+		if (createDeploymentEntity.getBody() == null) {
+			throw new IllegalStateException();
 		}
-		return null;
+		return createDeploymentEntity.getBody().code();
 	}
 
 	@Override
@@ -90,7 +84,7 @@ public class DefaultCloudDeploymentService extends AbstractCloudService implemen
 			DeploymentProgressDTO deploymentProgress = getDeploymentProgress(deploymentCode);
 			if (deploymentProgress != null) {
 				LOG.info("Deployment progress {}%", deploymentProgress.percentage());
-				if (DeploymentStatus.DEPLOYED.name().equals(deploymentProgress.deploymentStatus())) {
+				if (DeploymentStatus.DEPLOYED.equals(deploymentProgress.deploymentStatus())) {
 					LOG.info("Deployment progress: {}", DeploymentStatus.DEPLOYED);
 					if (notificationService.isPresent()) {
 						notificationService.get().sendMessage(notificationService.get().formatMessageForDTO(deploymentProgress));
@@ -107,17 +101,17 @@ public class DefaultCloudDeploymentService extends AbstractCloudService implemen
 		LOG.info("Retrieving deployment progress for deploymentCode: {}", deploymentCode);
 		HttpEntity<?> entity = prepareHttpEntity(null);
 		ResponseEntity<DeploymentProgressDTO> deploymentProgressEntity;
-		try {
-			deploymentProgressEntity = restTemplate.exchange(
-					PORTAL_API + subscriptionCode + "/deployments/" + deploymentCode + "/progress",
-					HttpMethod.GET,
-					entity,
-					DeploymentProgressDTO.class);
-		} catch (ResourceAccessException raex) {
-			LOG.error(raex.getMessage());
-			return null;
-		}
+		deploymentProgressEntity = restTemplate.exchange(
+				PORTAL_API + subscriptionCode + "/deployments/" + deploymentCode + "/progress",
+				HttpMethod.GET,
+				entity,
+				DeploymentProgressDTO.class);
 
 		return deploymentProgressEntity.getBody();
+	}
+
+	@Autowired(required = false)
+	public void setNotificationService(NotificationService notificationService) {
+		this.notificationService = Optional.ofNullable(notificationService);
 	}
 }

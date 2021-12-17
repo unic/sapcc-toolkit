@@ -31,7 +31,6 @@ public class DefaultCloudBuildService extends AbstractCloudService implements Cl
 
 	public final Environment env;
 
-	@Autowired(required = false)
 	private Optional<NotificationService> notificationService;
 
 	@Value("${toolkit.subscriptionCode:#{null}}")
@@ -90,7 +89,7 @@ public class DefaultCloudBuildService extends AbstractCloudService implements Cl
 				return;
 			}
 			LOG.info("Build progress: {} %", buildProgress.percentage());
-			if (BuildStatus.SUCCESS.name().equals(buildProgress.buildStatus())) {
+			if (BuildStatus.SUCCESS.equals(buildProgress.buildStatus())) {
 				LOG.info("Build status: {}", BuildStatus.SUCCESS);
 				if (notificationService.isPresent()) {
 					notificationService.get().sendMessage(notificationService.get().formatMessageForDTO(buildProgress));
@@ -118,5 +117,10 @@ public class DefaultCloudBuildService extends AbstractCloudService implements Cl
 			LOG.error(raex.getMessage(), raex);
 			return null;
 		}
+	}
+
+	@Autowired(required = false)
+	public void setNotificationService(NotificationService notificationService) {
+		this.notificationService = Optional.ofNullable(notificationService);
 	}
 }
