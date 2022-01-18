@@ -57,10 +57,19 @@ jacocoTestReport {
 
 sonarqube {
     properties {
-        property 'sonar.branch.name', "${project.hasProperty('sonarbranch') ? sonarbranch : ''}"
+        property 'sonar.branch.name', "${project.hasProperty('sonarbranch') ? sonarbranch : gitBranch()}"
         property 'sonar.branch.target', "${project.hasProperty('sonarbranchtarget') ? sonarbranchtarget : ''}"
         property 'sonar.host.url', 'https://sonar.service.unic24.net'
         property 'sonar.login', project.hasProperty('unicSonarUser') ? unicSonarUser : System.properties['sonar.login'] ?: 'undefined'
         property 'sonar.projectVersion', "$project.version"
     }
+}
+
+def gitBranch() {
+    def branch = ""
+    def proc = "git rev-parse --abbrev-ref HEAD".execute()
+    proc.in.eachLine { line -> branch = line }
+    proc.err.eachLine { line -> println line }
+    proc.waitFor()
+    branch
 }
