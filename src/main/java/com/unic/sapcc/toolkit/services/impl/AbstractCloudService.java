@@ -10,10 +10,10 @@ import org.springframework.stereotype.Service;
 public abstract class AbstractCloudService {
 
 	public static final String PORTAL_API = "https://portalrotapi.hana.ondemand.com/v2/subscriptions/";
-	@Value("${toolkit.apiKey}")
+	@Value("${toolkit.apiKey:#{null}}")
 	private String apiKey;
 
-	public <T>  HttpEntity<T> prepareHttpEntity(T bodyDTO) {
+	public <T> HttpEntity<T> prepareHttpEntity(T bodyDTO) {
 		HttpHeaders headers = new HttpHeaders();
 		headers.setContentType(MediaType.APPLICATION_JSON);
 		headers.setBearerAuth(apiKey);

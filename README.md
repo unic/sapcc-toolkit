@@ -2,13 +2,19 @@
 This CLI toolkit provides functionalities to create and monitor builds and deployments within the SAP Commerce Cloud.
 
 ## Setup
+
 To set up your SAP CC CLI Toolkit please provide your:
-- SAP Commerce Cloud Subscription Code
-- SAP Commerce Cloud API token/key
+
+- SAP Commerce Cloud Subscription Code*
+- SAP Commerce Cloud API token/key*
 - Define a maximum waiting time in minutes for builds (default: 30min)
 - Define a maximum waiting time in minutes for deployments (default: 30min)
 - Define polling/interval rate in seconds for builds (default: 5sec)
 - Define polling/interval rate in seconds for deployments (default: 5sec)
+- Enable notification service for MS Teams webhook (default: false)
+- Define MS Teams webhook URL (default: empty)
+
+*mandatory
 
 using the file: **src/main/resources/application.properties**
 
@@ -21,11 +27,14 @@ toolkit.build.sleepTime = <insert your polling/interval rate for build progress 
 
 toolkit.deploy.maxWaitTime = <insert your maximum waiting time in minutes for deployments here>
 toolkit.deploy.sleepTime= <insert your polling/interval rate in seconds for build progress here>
+
+notification.teams.enabled = true/false
+notification.teams.webhook.url = <insert your teams webhook url>
 ```
 
 ## Building
 
-Please us ethe default Spring boot gradle tasks to build this application:
+Please use the default Spring boot gradle tasks to build this application:
 
 ```shell
 ./gradlew bootJar

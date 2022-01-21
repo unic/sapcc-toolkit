@@ -7,7 +7,6 @@ import com.unic.sapcc.toolkit.enums.CloudEnvironment;
 import com.unic.sapcc.toolkit.enums.DatabaseUpdateMode;
 import com.unic.sapcc.toolkit.enums.DeployStrategy;
 import com.unic.sapcc.toolkit.enums.DeploymentStatus;
-import com.unic.sapcc.toolkit.services.CloudDeploymentService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -33,20 +32,16 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class DefaultCloudDeploymentServiceTest {
-	@Mock
-	private Environment env;
-
-	@Mock
-	private RestTemplate restTemplate;
-
-	@Captor
-	private ArgumentCaptor<HttpEntity<DeploymentRequestDTO>> entityCaptor;
-
-	@InjectMocks
-	private DefaultCloudDeploymentService unitUnderTest;
-
 	private final static String fakeSubscriptionId = "abcd1234";
 	private final static String baseurl = "https://portalrotapi.hana.ondemand.com/v2/subscriptions/" + fakeSubscriptionId;
+	@Mock
+	private Environment env;
+	@Mock
+	private RestTemplate restTemplate;
+	@Captor
+	private ArgumentCaptor<HttpEntity<DeploymentRequestDTO>> entityCaptor;
+	@InjectMocks
+	private DefaultCloudDeploymentService unitUnderTest;
 
 	@BeforeEach
 	public void beforeEach() {
@@ -64,6 +59,7 @@ class DefaultCloudDeploymentServiceTest {
 		when(restTemplate.exchange(eq(url), eq(HttpMethod.POST), any(HttpEntity.class), eq(DeploymentResponseDTO.class)))
 				.thenReturn(new ResponseEntity<>(deploymentResponseDTO, HttpStatus.OK));
 
+		unitUnderTest.setNotificationService(null);
 		unitUnderTest.createDeployment(dto);
 
 		verify(restTemplate).exchange(eq(url), eq(HttpMethod.POST), entityCaptor.capture(), eq(DeploymentResponseDTO.class));
@@ -82,6 +78,7 @@ class DefaultCloudDeploymentServiceTest {
 				eq(DeploymentResponseDTO.class)))
 				.thenReturn(new ResponseEntity<>(deploymentResponseDTO, HttpStatus.OK));
 
+		unitUnderTest.setNotificationService(null);
 		String result = unitUnderTest.createDeployment(dto);
 		assertEquals(code, result);
 	}
@@ -107,13 +104,14 @@ class DefaultCloudDeploymentServiceTest {
 		final String deploymentCode = "fakeDeployCode";
 		final String url = baseurl + "/deployments/" + deploymentCode + "/progress";
 
-		final DeploymentProgressDTO buildProgressDTO = new DeploymentProgressDTO("", "", DeploymentStatus.DEPLOYED, 0, null);
+		final DeploymentProgressDTO deploymentProgressDTO = new DeploymentProgressDTO("", "", DeploymentStatus.DEPLOYED, 0, null);
 
 		when(restTemplate.exchange(eq(url), eq(HttpMethod.GET), any(HttpEntity.class), eq(DeploymentProgressDTO.class))).thenReturn(
-				new ResponseEntity<>(buildProgressDTO, HttpStatus.OK));
+				new ResponseEntity<>(deploymentProgressDTO, HttpStatus.OK));
 		when(env.getProperty(eq("toolkit.deploy.sleepTime"), anyString())).thenReturn("5");
-		when(env.getProperty(eq("toolkit.deploy.maxWaitTime"), anyString())).thenReturn("30");
+		when(env.getProperty(eq("toolkit.deploy.maxWaitTime"), anyString())).thenReturn("1");
 
+		unitUnderTest.setNotificationService(null);
 		unitUnderTest.handleDeploymentProgress(deploymentCode);
 
 		verify(restTemplate).exchange(eq(url), eq(HttpMethod.GET), any(HttpEntity.class), eq(DeploymentProgressDTO.class));

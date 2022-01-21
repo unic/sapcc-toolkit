@@ -8,17 +8,19 @@ import com.unic.sapcc.toolkit.enums.DatabaseUpdateMode;
 import com.unic.sapcc.toolkit.enums.DeployStrategy;
 import com.unic.sapcc.toolkit.enums.DeploymentStatus;
 import com.unic.sapcc.toolkit.services.CloudDeploymentService;
+import com.unic.sapcc.toolkit.services.NotificationService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 @Service
@@ -30,7 +32,9 @@ public class DefaultCloudDeploymentService extends AbstractCloudService implemen
 
 	public final Environment env;
 
-	@Value("${toolkit.subscriptionCode}")
+	private Optional<NotificationService> notificationService;
+
+	@Value("${toolkit.subscriptionCode:#{null}}")
 	private String subscriptionCode;
 
 	public DefaultCloudDeploymentService(RestTemplate restTemplate, Environment env) {
@@ -42,12 +46,13 @@ public class DefaultCloudDeploymentService extends AbstractCloudService implemen
 	public String createDeployment(DeploymentRequestDTO deploymentRequestDTO) {
 		LOG.info("Starting deployment with requestDTO: {}", deploymentRequestDTO);
 		HttpEntity<DeploymentRequestDTO> entity = prepareHttpEntity(deploymentRequestDTO);
+
 		ResponseEntity<DeploymentResponseDTO> createDeploymentEntity = restTemplate.exchange(
 				PORTAL_API + subscriptionCode + "/deployments",
 				HttpMethod.POST,
 				entity,
 				DeploymentResponseDTO.class);
-		if(createDeploymentEntity.getBody() == null){
+		if (createDeploymentEntity.getBody() == null) {
 			throw new IllegalStateException();
 		}
 		return createDeploymentEntity.getBody().code();
@@ -76,11 +81,14 @@ public class DefaultCloudDeploymentService extends AbstractCloudService implemen
 				throw new IllegalStateException(
 						"Maximum waiting time of " + maxWaitTime + " seconds reached. Aborting deployment progress watching process.");
 			}
-			DeploymentProgressDTO deploymentProgress = getDeploymentProgress(deploymentCode);
-			if (deploymentProgress != null) {
-				LOG.info("Deployment progress {}%", deploymentProgress.percentage());
-				if (DeploymentStatus.DEPLOYED.equals(deploymentProgress.deploymentStatus())) {
+			DeploymentProgressDTO deploymentProgressDTO = getDeploymentProgress(deploymentCode);
+			if (deploymentProgressDTO != null) {
+				LOG.info("Deployment progress {}%", deploymentProgressDTO.percentage());
+				if (DeploymentStatus.DEPLOYED.equals(deploymentProgressDTO.deploymentStatus())) {
 					LOG.info("Deployment progress: {}", DeploymentStatus.DEPLOYED);
+					if (notificationService.isPresent()) {
+						notificationService.get().sendMessage(deploymentProgressDTO);
+					}
 					return;
 				}
 			}
@@ -93,17 +101,17 @@ public class DefaultCloudDeploymentService extends AbstractCloudService implemen
 		LOG.info("Retrieving deployment progress for deploymentCode: {}", deploymentCode);
 		HttpEntity<?> entity = prepareHttpEntity(null);
 		ResponseEntity<DeploymentProgressDTO> deploymentProgressEntity;
-		try {
-			deploymentProgressEntity = restTemplate.exchange(
-					PORTAL_API + subscriptionCode + "/deployments/" + deploymentCode + "/progress",
-					HttpMethod.GET,
-					entity,
-					DeploymentProgressDTO.class);
-		} catch (ResourceAccessException raex) {
-			LOG.error(raex.getMessage());
-			return null;
-		}
+		deploymentProgressEntity = restTemplate.exchange(
+				PORTAL_API + subscriptionCode + "/deployments/" + deploymentCode + "/progress",
+				HttpMethod.GET,
+				entity,
+				DeploymentProgressDTO.class);
 
 		return deploymentProgressEntity.getBody();
+	}
+
+	@Autowired(required = false)
+	public void setNotificationService(NotificationService notificationService) {
+		this.notificationService = Optional.ofNullable(notificationService);
 	}
 }

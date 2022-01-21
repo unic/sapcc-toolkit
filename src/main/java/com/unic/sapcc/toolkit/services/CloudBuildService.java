@@ -1,8 +1,6 @@
 package com.unic.sapcc.toolkit.services;
 
-import com.unic.sapcc.toolkit.dto.BuildProgressDTO;
 import com.unic.sapcc.toolkit.dto.BuildRequestDTO;
-import com.unic.sapcc.toolkit.enums.BuildStatus;
 
 /**
  * CloudBuildService provides methods to start and watch progress of builds in the SAP Commerce Cloud
@@ -26,14 +24,6 @@ public interface CloudBuildService {
 	 * @return the newly created buildCode as String
 	 */
 	String createBuild(BuildRequestDTO buildRequestDTO);
-
-	/**
-	 * Verify the build progress for the build parameters wrapped in BuildProgressDTO.
-	 *
-	 * @param buildProgressDTO
-	 * @return the current BuildStatus as enum
-	 */
-	BuildStatus verifyBuildProgress(BuildProgressDTO buildProgressDTO);
 
 	/**
 	 * Monitor the build progress for the given buildCode for a maximum time of ${toolkit.build.maxWaitTime}.
