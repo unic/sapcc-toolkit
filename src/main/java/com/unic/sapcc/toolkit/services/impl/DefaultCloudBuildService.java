@@ -8,12 +8,13 @@ import com.unic.sapcc.toolkit.services.CloudBuildService;
 import com.unic.sapcc.toolkit.services.NotificationService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
+import org.springframework.lang.Nullable;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.ResourceAccessException;
@@ -31,14 +32,18 @@ public class DefaultCloudBuildService extends AbstractCloudService implements Cl
 
 	public final Environment env;
 
-	private Optional<NotificationService> notificationService;
+	private NotificationService notificationService;
 
 	@Value("${toolkit.subscriptionCode:#{null}}")
 	private String subscriptionCode;
 
-	public DefaultCloudBuildService(RestTemplate restTemplate, Environment env) {
+	public DefaultCloudBuildService(
+			RestTemplate restTemplate,
+			Environment env,
+			@Nullable NotificationService notificationService) {
 		this.restTemplate = restTemplate;
 		this.env = env;
+		this.notificationService = notificationService != null ? notificationService : new NoOpNotificationService();
 	}
 
 	@Override
@@ -91,15 +96,14 @@ public class DefaultCloudBuildService extends AbstractCloudService implements Cl
 			LOG.info("Build progress: {} %", buildProgressDTO.percentage());
 			if (BuildStatus.SUCCESS.equals(buildProgressDTO.buildStatus())) {
 				LOG.info("Build status: {}", BuildStatus.SUCCESS);
-				if (notificationService.isPresent()) {
-					notificationService.get().sendMessage(buildProgressDTO);
-				}
+				notificationService.sendMessage(buildProgressDTO);
 				return;
 			}
 			TimeUnit.SECONDS.sleep(sleepTime);
 		}
 	}
 
+	@Retryable
 	private BuildProgressDTO getBuildProgress(String buildCode) {
 		LOG.info("Retrieving build progress for buildCode '{}'", buildCode);
 		HttpEntity<?> entity = prepareHttpEntity(null);
@@ -117,10 +121,5 @@ public class DefaultCloudBuildService extends AbstractCloudService implements Cl
 			LOG.error(raex.getMessage(), raex);
 			return null;
 		}
-	}
-
-	@Autowired(required = false)
-	public void setNotificationService(NotificationService notificationService) {
-		this.notificationService = Optional.ofNullable(notificationService);
 	}
 }

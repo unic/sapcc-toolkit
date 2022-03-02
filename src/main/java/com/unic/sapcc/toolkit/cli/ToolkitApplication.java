@@ -8,6 +8,7 @@ import com.unic.sapcc.toolkit.enums.DeployStrategy;
 import com.unic.sapcc.toolkit.services.CloudBuildService;
 import com.unic.sapcc.toolkit.services.CloudDeploymentService;
 import com.unic.sapcc.toolkit.services.NotificationService;
+import com.unic.sapcc.toolkit.services.impl.NoOpNotificationService;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
@@ -24,9 +25,9 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Profile;
+import org.springframework.lang.Nullable;
 
 import java.time.LocalDate;
-import java.util.Optional;
 
 @Profile("!test")
 @SpringBootApplication
@@ -54,7 +55,7 @@ public class ToolkitApplication implements CommandLineRunner {
 	@Autowired
 	private ConfigurableApplicationContext applicationContext;
 
-	private Optional<NotificationService> notificationService;
+	private NotificationService notificationService;
 
 	public static void main(String[] args) {
 		SpringApplication.run(ToolkitApplication.class, args);
@@ -135,9 +136,8 @@ public class ToolkitApplication implements CommandLineRunner {
 		String buildName = cmd.getOptionValue(SHORTOPTION_BUILDNAME, "develop-" + LocalDate.now());
 		BuildRequestDTO buildRequestDTO = new BuildRequestDTO(applicationCode, buildBranch, buildName);
 
-		if (notificationService.isPresent()) {
-			notificationService.get().sendMessage(buildRequestDTO);
-		}
+		notificationService.sendMessage(buildRequestDTO);
+
 		return cloudBuildService.createBuild(buildRequestDTO);
 	}
 
@@ -148,9 +148,8 @@ public class ToolkitApplication implements CommandLineRunner {
 
 		DeploymentRequestDTO deploymentRequestDTO = cloudDeploymentService.createDeploymentRequestDTO(buildCode, dbUpdateMode,
 				deployEnvironment, deployStrategy);
-		if (notificationService.isPresent()) {
-			notificationService.get().sendMessage(deploymentRequestDTO);
-		}
+		notificationService.sendMessage(deploymentRequestDTO);
+
 		return cloudDeploymentService.createDeployment(deploymentRequestDTO);
 	}
 
@@ -174,7 +173,7 @@ public class ToolkitApplication implements CommandLineRunner {
 	}
 
 	@Autowired(required = false)
-	public void setNotificationService(NotificationService notificationService) {
-		this.notificationService = Optional.ofNullable(notificationService);
+	public void setNotificationService(@Nullable NotificationService notificationService) {
+		this.notificationService = notificationService != null ? notificationService : new NoOpNotificationService();
 	}
 }

@@ -7,6 +7,8 @@ import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.retry.support.RetryTemplate;
+import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 
 import java.time.Duration;
@@ -22,5 +24,14 @@ public class ToolkitConfig {
 	@Conditional(TeamsWebhookNotificationCondition.class)
 	public NotificationService getTeamsNotificationService() {
 		return new TeamsWebhookNotificationService();
+	}
+
+	@Bean
+	public RetryTemplate retryRemoteAccessExceptionTemplate() {
+		return RetryTemplate.builder()
+				.maxAttempts(3)
+				.fixedBackoff(2000)
+				.retryOn(ResourceAccessException.class)
+				.build();
 	}
 }

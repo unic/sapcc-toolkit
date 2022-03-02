@@ -11,16 +11,16 @@ import com.unic.sapcc.toolkit.services.CloudDeploymentService;
 import com.unic.sapcc.toolkit.services.NotificationService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
+import org.springframework.lang.Nullable;
+import org.springframework.retry.support.RetryTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 @Service
@@ -30,16 +30,24 @@ public class DefaultCloudDeploymentService extends AbstractCloudService implemen
 
 	public final RestTemplate restTemplate;
 
+	public final RetryTemplate retryTemplate;
+
 	public final Environment env;
 
-	private Optional<NotificationService> notificationService;
+	private NotificationService notificationService;
 
 	@Value("${toolkit.subscriptionCode:#{null}}")
 	private String subscriptionCode;
 
-	public DefaultCloudDeploymentService(RestTemplate restTemplate, Environment env) {
+	public DefaultCloudDeploymentService(
+			RestTemplate restTemplate,
+			RetryTemplate retryTemplate,
+			Environment env,
+			@Nullable NotificationService notificationService) {
 		this.restTemplate = restTemplate;
+		this.retryTemplate = retryTemplate;
 		this.env = env;
+		this.notificationService = notificationService != null ? notificationService : new NoOpNotificationService();
 	}
 
 	@Override
@@ -86,9 +94,7 @@ public class DefaultCloudDeploymentService extends AbstractCloudService implemen
 				LOG.info("Deployment progress {}%", deploymentProgressDTO.percentage());
 				if (DeploymentStatus.DEPLOYED.equals(deploymentProgressDTO.deploymentStatus())) {
 					LOG.info("Deployment progress: {}", DeploymentStatus.DEPLOYED);
-					if (notificationService.isPresent()) {
-						notificationService.get().sendMessage(deploymentProgressDTO);
-					}
+					notificationService.sendMessage(deploymentProgressDTO);
 					return;
 				}
 			}
@@ -100,18 +106,15 @@ public class DefaultCloudDeploymentService extends AbstractCloudService implemen
 	private DeploymentProgressDTO getDeploymentProgress(String deploymentCode) {
 		LOG.info("Retrieving deployment progress for deploymentCode: {}", deploymentCode);
 		HttpEntity<?> entity = prepareHttpEntity(null);
-		ResponseEntity<DeploymentProgressDTO> deploymentProgressEntity;
-		deploymentProgressEntity = restTemplate.exchange(
-				PORTAL_API + subscriptionCode + "/deployments/" + deploymentCode + "/progress",
-				HttpMethod.GET,
-				entity,
-				DeploymentProgressDTO.class);
+
+		ResponseEntity<DeploymentProgressDTO> deploymentProgressEntity = retryTemplate.execute(
+				ctx -> restTemplate.exchange(
+						PORTAL_API + subscriptionCode + "/deployments/" + deploymentCode + "/progress",
+						HttpMethod.GET,
+						entity,
+						DeploymentProgressDTO.class)
+		);
 
 		return deploymentProgressEntity.getBody();
-	}
-
-	@Autowired(required = false)
-	public void setNotificationService(NotificationService notificationService) {
-		this.notificationService = Optional.ofNullable(notificationService);
 	}
 }

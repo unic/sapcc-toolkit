@@ -57,7 +57,6 @@ class DefaultCloudBuildServiceTest {
 		when(restTemplate.exchange(eq(url), eq(HttpMethod.POST), any(HttpEntity.class), eq(BuildResponseDTO.class))).thenReturn(
 				new ResponseEntity<>(null, HttpStatus.OK));
 
-		unitUnderTest.setNotificationService(null);
 		unitUnderTest.createBuild(appCode, branch, name);
 
 		verify(restTemplate).exchange(eq(url), eq(HttpMethod.POST), entityCaptor.capture(), eq(BuildResponseDTO.class));
@@ -79,7 +78,6 @@ class DefaultCloudBuildServiceTest {
 		when(restTemplate.exchange(eq(url), eq(HttpMethod.POST), any(HttpEntity.class), eq(BuildResponseDTO.class))).thenReturn(
 				new ResponseEntity<>(buildResponseDTO, HttpStatus.OK));
 
-		unitUnderTest.setNotificationService(null);
 		String response = unitUnderTest.createBuild("", "", "");
 		assertEquals(buildCode, response);
 	}
@@ -94,7 +92,6 @@ class DefaultCloudBuildServiceTest {
 		when(restTemplate.exchange(eq(url), eq(HttpMethod.POST), any(HttpEntity.class), eq(BuildResponseDTO.class))).thenReturn(
 				new ResponseEntity<>(null, HttpStatus.OK));
 
-		unitUnderTest.setNotificationService(null);
 		String response = unitUnderTest.createBuild("", "", "");
 		assertNull(response);
 	}
@@ -112,7 +109,6 @@ class DefaultCloudBuildServiceTest {
 		when(env.getProperty(eq("toolkit.build.sleepTime"), anyString())).thenReturn("5");
 		when(env.getProperty(eq("toolkit.build.maxWaitTime"), anyString())).thenReturn("1");
 
-		unitUnderTest.setNotificationService(null);
 		unitUnderTest.handleBuildProgress(buildCode);
 
 		verify(restTemplate).exchange(eq(url), eq(HttpMethod.GET), any(HttpEntity.class), eq(BuildProgressDTO.class));
