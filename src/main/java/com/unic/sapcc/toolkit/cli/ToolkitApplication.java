@@ -55,8 +55,6 @@ public class ToolkitApplication implements CommandLineRunner {
 	@Autowired
 	private ConfigurableApplicationContext applicationContext;
 
-	private NotificationService notificationService;
-
 	public static void main(String[] args) {
 		SpringApplication.run(ToolkitApplication.class, args);
 	}
@@ -136,8 +134,6 @@ public class ToolkitApplication implements CommandLineRunner {
 		String buildName = cmd.getOptionValue(SHORTOPTION_BUILDNAME, "develop-" + LocalDate.now());
 		BuildRequestDTO buildRequestDTO = new BuildRequestDTO(applicationCode, buildBranch, buildName);
 
-		notificationService.sendMessage(buildRequestDTO);
-
 		return cloudBuildService.createBuild(buildRequestDTO);
 	}
 
@@ -148,7 +144,6 @@ public class ToolkitApplication implements CommandLineRunner {
 
 		DeploymentRequestDTO deploymentRequestDTO = cloudDeploymentService.createDeploymentRequestDTO(buildCode, dbUpdateMode,
 				deployEnvironment, deployStrategy);
-		notificationService.sendMessage(deploymentRequestDTO);
 
 		return cloudDeploymentService.createDeployment(deploymentRequestDTO);
 	}
@@ -170,10 +165,5 @@ public class ToolkitApplication implements CommandLineRunner {
 			LOG.error("Error during deployment watching progress", e);
 			System.exit(1);
 		}
-	}
-
-	@Autowired(required = false)
-	public void setNotificationService(@Nullable NotificationService notificationService) {
-		this.notificationService = notificationService != null ? notificationService : new NoOpNotificationService();
 	}
 }

@@ -55,6 +55,8 @@ public class DefaultCloudBuildService extends AbstractCloudService implements Cl
 	@Override
 	public String createBuild(BuildRequestDTO buildRequestDTO) {
 		LOG.info("Create Build with params: {}", buildRequestDTO);
+		notificationService.sendMessage(buildRequestDTO);
+
 		HttpEntity<?> entity = prepareHttpEntity(buildRequestDTO);
 		try {
 			ResponseEntity<BuildResponseDTO> createdBuildEntity = restTemplate.exchange(

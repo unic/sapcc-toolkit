@@ -53,6 +53,8 @@ public class DefaultCloudDeploymentService extends AbstractCloudService implemen
 	@Override
 	public String createDeployment(DeploymentRequestDTO deploymentRequestDTO) {
 		LOG.info("Starting deployment with requestDTO: {}", deploymentRequestDTO);
+		notificationService.sendMessage(deploymentRequestDTO);
+
 		HttpEntity<DeploymentRequestDTO> entity = prepareHttpEntity(deploymentRequestDTO);
 
 		ResponseEntity<DeploymentResponseDTO> createDeploymentEntity = restTemplate.exchange(

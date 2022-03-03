@@ -47,7 +47,7 @@ class ToolkitApplicationTests {
 		Mockito.when(cloudDeploymentService.createDeploymentRequestDTO(BUILD_CODE, NONE, d1, ROLLING_UPDATE))
 				.thenReturn(deploymentRequest);
 		Mockito.when(cloudDeploymentService.createDeployment(deploymentRequest)).thenReturn(DEPLOYMENT_CODE);
-		unitUnderTest.setNotificationService(null);
+
 		unitUnderTest.run(args);
 
 		Mockito.verify(cloudBuildService).handleBuildProgress(BUILD_CODE);
@@ -61,7 +61,7 @@ class ToolkitApplicationTests {
 
 		BuildRequestDTO buildRequestDTO = new BuildRequestDTO(APPCODE, "develop", BUILD_NAME);
 		Mockito.when(cloudBuildService.createBuild(buildRequestDTO)).thenReturn(BUILD_CODE);
-		unitUnderTest.setNotificationService(null);
+
 		unitUnderTest.run(args);
 
 		Mockito.verify(cloudBuildService).handleBuildProgress(BUILD_CODE);
@@ -77,7 +77,7 @@ class ToolkitApplicationTests {
 		Mockito.when(cloudDeploymentService.createDeploymentRequestDTO(BUILD_CODE, NONE, d1, ROLLING_UPDATE))
 				.thenReturn(deploymentRequest);
 		Mockito.when(cloudDeploymentService.createDeployment(deploymentRequest)).thenReturn(DEPLOYMENT_CODE);
-		unitUnderTest.setNotificationService(null);
+
 		unitUnderTest.run(args);
 
 		Mockito.verify(cloudBuildService).handleBuildProgress(BUILD_CODE);
