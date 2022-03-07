@@ -7,8 +7,6 @@ import com.unic.sapcc.toolkit.enums.DatabaseUpdateMode;
 import com.unic.sapcc.toolkit.enums.DeployStrategy;
 import com.unic.sapcc.toolkit.services.CloudBuildService;
 import com.unic.sapcc.toolkit.services.CloudDeploymentService;
-import com.unic.sapcc.toolkit.services.NotificationService;
-import com.unic.sapcc.toolkit.services.impl.NoOpNotificationService;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
@@ -25,8 +23,12 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Profile;
-import org.springframework.lang.Nullable;
+import org.springframework.util.StringUtils;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.LocalDate;
 
 @Profile("!test")
@@ -35,6 +37,7 @@ import java.time.LocalDate;
 public class ToolkitApplication implements CommandLineRunner {
 
 	public static final String SHORTOPTION_BUILD = "b";
+	public static final String SHORTOPTION_ASYNC = "y";
 	public static final String SHORTOPTION_DEPLOY = "d";
 	public static final String SHORTOPTION_BUILDCODE = "c";
 	public static final String SHOROPTION_APPCODE = "a";
@@ -45,6 +48,7 @@ public class ToolkitApplication implements CommandLineRunner {
 	public static final String SHORTOPTION_STRATEGY = "s";
 	private static final Logger LOG = LoggerFactory.getLogger(ToolkitApplication.class);
 	private static final String SHORTOPTION_HELP = "h";
+	private static final String SHORTOPTION_PIDFILE = "p";
 
 	@Autowired
 	public CloudBuildService cloudBuildService;
@@ -64,6 +68,7 @@ public class ToolkitApplication implements CommandLineRunner {
 		options.addOption(SHORTOPTION_HELP, "help", false, "print usage help");
 
 		options.addOption(SHORTOPTION_BUILD, "build", false, "Execute build");
+		options.addOption(SHORTOPTION_ASYNC, "async", false, "Don't monitor progress");
 		options.addOption(SHORTOPTION_DEPLOY, "deploy", false, "Execute deployment");
 		options.addOption(SHORTOPTION_BUILDCODE, "buildcode", true, "Code of build to deploy");
 
@@ -74,6 +79,8 @@ public class ToolkitApplication implements CommandLineRunner {
 		options.addOption(SHOROPTION_APPCODE, "applicationcode", true, "application code");
 		options.addOption(SHORTOPTION_BRANCH, "branch", true, "branch to be build");
 		options.addOption(SHORTOPTION_BUILDNAME, "name", true, "build name");
+
+		options.addOption(SHORTOPTION_PIDFILE, "pidfile", true, "process id file");
 		return options;
 	}
 
@@ -89,6 +96,11 @@ public class ToolkitApplication implements CommandLineRunner {
 		String buildCode = null;
 		if (cmd.hasOption(SHORTOPTION_BUILD)) {
 			buildCode = createBuild(cmd);
+
+			if (cmd.hasOption(SHORTOPTION_ASYNC)) {
+				LOG.info("Detected ASYNC option, ignoring any further commands.");
+				return;
+			}
 			watchBuildProgress(buildCode);
 		}
 
@@ -98,6 +110,11 @@ public class ToolkitApplication implements CommandLineRunner {
 				watchBuildProgress(buildCode);
 			}
 			String deploymentCode = createDeployment(buildCode, cmd);
+
+			if (cmd.hasOption(SHORTOPTION_ASYNC)) {
+				LOG.info("Detected ASYNC option, ignoring any further commands.");
+				return;
+			}
 			watchDeploymentProgress(deploymentCode);
 		}
 
@@ -134,7 +151,11 @@ public class ToolkitApplication implements CommandLineRunner {
 		String buildName = cmd.getOptionValue(SHORTOPTION_BUILDNAME, "develop-" + LocalDate.now());
 		BuildRequestDTO buildRequestDTO = new BuildRequestDTO(applicationCode, buildBranch, buildName);
 
-		return cloudBuildService.createBuild(buildRequestDTO);
+		String buildId = cloudBuildService.createBuild(buildRequestDTO);
+
+		writeProcessIdToFile(cmd.getOptionValue(SHORTOPTION_PIDFILE), buildId);
+
+		return buildId;
 	}
 
 	private String createDeployment(String buildCode, CommandLine cmd) {
@@ -164,6 +185,20 @@ public class ToolkitApplication implements CommandLineRunner {
 		} catch (InterruptedException | IllegalStateException e) {
 			LOG.error("Error during deployment watching progress", e);
 			System.exit(1);
+		}
+	}
+
+	private void writeProcessIdToFile(String filePath, String id) {
+		if (!StringUtils.hasText(filePath)) {
+			LOG.debug("Not writing process ID to to empty path");
+			return;
+		}
+		Path path = Paths.get(filePath);
+		try {
+			LOG.info("writing process ID to " + path.toAbsolutePath());
+			Files.writeString(path, id);
+		} catch (IOException e) {
+			LOG.error("Failed to write out process Id!", e);
 		}
 	}
 }
