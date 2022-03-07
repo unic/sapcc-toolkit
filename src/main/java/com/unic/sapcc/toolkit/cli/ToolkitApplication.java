@@ -7,8 +7,6 @@ import com.unic.sapcc.toolkit.enums.DatabaseUpdateMode;
 import com.unic.sapcc.toolkit.enums.DeployStrategy;
 import com.unic.sapcc.toolkit.services.CloudBuildService;
 import com.unic.sapcc.toolkit.services.CloudDeploymentService;
-import com.unic.sapcc.toolkit.services.NotificationService;
-import com.unic.sapcc.toolkit.services.impl.NoOpNotificationService;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
@@ -25,10 +23,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Profile;
-import org.springframework.lang.Nullable;
 import org.springframework.util.StringUtils;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -101,7 +97,7 @@ public class ToolkitApplication implements CommandLineRunner {
 		if (cmd.hasOption(SHORTOPTION_BUILD)) {
 			buildCode = createBuild(cmd);
 
-			if(cmd.hasOption(SHORTOPTION_ASYNC)){
+			if (cmd.hasOption(SHORTOPTION_ASYNC)) {
 				LOG.info("Detected ASYNC option, ignoring any further commands.");
 				return;
 			}
@@ -115,7 +111,7 @@ public class ToolkitApplication implements CommandLineRunner {
 			}
 			String deploymentCode = createDeployment(buildCode, cmd);
 
-			if(cmd.hasOption(SHORTOPTION_ASYNC)){
+			if (cmd.hasOption(SHORTOPTION_ASYNC)) {
 				LOG.info("Detected ASYNC option, ignoring any further commands.");
 				return;
 			}
@@ -124,7 +120,6 @@ public class ToolkitApplication implements CommandLineRunner {
 
 		applicationContext.close();
 	}
-
 
 	private CommandLine getCommandLine(final Options options, final String[] args) throws ParseException {
 		CommandLineParser parser = new DefaultParser();
@@ -193,17 +188,17 @@ public class ToolkitApplication implements CommandLineRunner {
 		}
 	}
 
-	private void writeProcessIdToFile(String filePath , String id){
-		if(!StringUtils.hasText(filePath)){
+	private void writeProcessIdToFile(String filePath, String id) {
+		if (!StringUtils.hasText(filePath)) {
 			LOG.debug("Not writing process ID to to empty path");
 			return;
 		}
 		Path path = Paths.get(filePath);
 		try {
-			LOG.info("writing process ID to "+path.toAbsolutePath());
+			LOG.info("writing process ID to " + path.toAbsolutePath());
 			Files.writeString(path, id);
 		} catch (IOException e) {
-			LOG.error("Failed to write out process Id!",e);
+			LOG.error("Failed to write out process Id!", e);
 		}
 	}
 }
