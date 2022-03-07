@@ -16,7 +16,7 @@ To set up your SAP CC CLI Toolkit please provide your:
 
 *mandatory
 
-using the file: **src/main/resources/application.properties**
+using the file: `<workdir>/config/application.properties`
 
 ```properties
 toolkit.subscriptionCode = <insert your SAP CC subscription code here>
@@ -42,27 +42,41 @@ Please use the default Spring boot gradle tasks to build this application:
 
 
 ## Usage
-You can use this SAP CC CLI Toolkit by running following command (example):
+You can list all current flags and parameters by running the jar with the --help flag:
 ```shell
-java -jar build/libs/sapcc-toolkit-*.jar \
-  --build \
-  --branch develop \
-  --name develop-20220101 \
-  --deploy \
-  --environment d1 \
-  --updatemode UPDATE \
-  --strategy ROLLING_UPDATE
-```
+java -jar build/libs/sapcc-toolkit-*.jar --help
 
-Run `java -jar build/libs/sapcc-toolkit-*.jar -h` to print a usage explanation
+[...]
+
+usage: sapcc-toolkit
+ -a,--applicationcode <arg>   application code
+ -b,--build                   Execute build
+ -c,--buildcode <arg>         Code of build to deploy
+ -d,--deploy                  Execute deployment
+ -e,--environment <arg>       environment for deployment
+ -h,--help                    print usage help
+ -n,--name <arg>              build name
+ -p,--pidfile <arg>           process id file
+ -r,--branch <arg>            branch to be build
+ -s,--strategy <arg>          deployment strategy
+ -u,--updatemode <arg>        database update mode for deployment
+ -y,--async                   Don't monitor progress
+```
 
 ## Examples
 
-### Create a new build without deployment
+### Create a new build of the develop branch (without deployment)
 
 ```shell
 java -jar build/libs/sapcc-toolkit-*.jar --build
 ```
+
+### Create a new build of the develop branch but don't wait for it to finish
+
+```shell
+java -jar build/libs/sapcc-toolkit-*.jar --build --async
+```
+
 ### Create a new release build without deployment
 
 ```shell
