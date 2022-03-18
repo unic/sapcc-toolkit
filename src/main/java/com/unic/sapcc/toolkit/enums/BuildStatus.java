@@ -5,5 +5,6 @@ public enum BuildStatus {
 	SCHEDULED,
 	BUILDING,
 	SUCCESS,
-	ERROR
+	ERROR,
+	FAIL
 }
