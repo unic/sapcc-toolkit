@@ -148,7 +148,7 @@ public class ToolkitApplication implements CommandLineRunner {
 
 		String applicationCode = cmd.getOptionValue(SHOROPTION_APPCODE, "");
 		String buildBranch = cmd.getOptionValue(SHORTOPTION_BRANCH, "develop");
-		String buildName = cmd.getOptionValue(SHORTOPTION_BUILDNAME, buildBranch + "-" + LocalDate.now());
+		String buildName = cmd.getOptionValue(SHORTOPTION_BUILDNAME, buildBranch.replaceAll("/", "_") + "-" + LocalDate.now());
 		BuildRequestDTO buildRequestDTO = new BuildRequestDTO(applicationCode, buildBranch, buildName);
 
 		String buildId = cloudBuildService.createBuild(buildRequestDTO);
