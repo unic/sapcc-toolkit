@@ -78,12 +78,12 @@ public class DefaultCloudBuildService extends AbstractCloudService implements Cl
 	}
 
 	@Override
-	public void handleBuildProgress(String buildCode) throws InterruptedException {
+	public void handleBuildProgress(String buildCode, boolean skipBuildTimeouts) throws InterruptedException {
 		long startTime = System.currentTimeMillis();
 
 		long sleepTime = Long.parseLong(env.getProperty("toolkit.build.sleepTime", "5"));
 		long maxWaitTime = Long.parseLong(env.getProperty("toolkit.build.maxWaitTime", "30"));
-		LOG.info("Build will be watched with polling rate of {} sec and max wait time of {} min", sleepTime, maxWaitTime);
+		LOG.info("Build will be watched with polling rate of {} sec and max wait time of {} min. skipBuildTimeouts is set to {}.", sleepTime, maxWaitTime, skipBuildTimeouts);
 
 		while (true) {
 			if (startTime + maxWaitTime * 1000 * 60 < System.currentTimeMillis()) {
@@ -93,6 +93,9 @@ public class DefaultCloudBuildService extends AbstractCloudService implements Cl
 
 			BuildProgressDTO buildProgressDTO = getBuildProgress(buildCode);
 			if (buildProgressDTO == null) {
+				if (skipBuildTimeouts) {
+					continue;
+				}
 				return;
 			}
 			LOG.info("Build progress: {} %", buildProgressDTO.percentage());

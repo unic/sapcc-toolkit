@@ -61,6 +61,7 @@ usage: sapcc-toolkit
  -s,--strategy <arg>          deployment strategy
  -u,--updatemode <arg>        database update mode for deployment
  -y,--async                   Don't monitor progress
+ -t,--skipBuildTimeouts       Skip build timeouts during build progress monitoring
 ```
 
 ## Examples
@@ -87,6 +88,12 @@ java -jar build/libs/sapcc-toolkit-*.jar --build  --branch release/1.6.0  --name
 
 ```shell
 java -jar build/libs/sapcc-toolkit-*.jar --build  --deploy
+```
+
+### Create a new develop (default) build and deploy this newly build on d1 without URS and skip build timeouts
+
+```shell
+java -jar build/libs/sapcc-toolkit-*.jar --build  --deploy  --skipBuildTimeouts
 ```
 
 ### Start a new rolling deployment for a given build on d1 without URS

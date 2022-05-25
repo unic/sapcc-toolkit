@@ -39,7 +39,7 @@ class ToolkitApplicationTests {
 	@Test
 	void testFullParameterSet() throws Exception {
 		String[] args = { "-b", "-a", APPCODE, "-r", BRANCH_NAME, "-n", BUILD_NAME, "-d", "-s", ROLLING_UPDATE.name(), "-u",
-				NONE.name(), "-e", d1.name() };
+				NONE.name(), "-e", d1.name(), "-t" };
 		DeploymentRequestDTO deploymentRequest = new DeploymentRequestDTO(BUILD_CODE, NONE, d1, ROLLING_UPDATE);
 		BuildRequestDTO buildRequestDTO = new BuildRequestDTO(APPCODE, BRANCH_NAME, BUILD_NAME);
 
@@ -50,7 +50,7 @@ class ToolkitApplicationTests {
 
 		unitUnderTest.run(args);
 
-		Mockito.verify(cloudBuildService).handleBuildProgress(BUILD_CODE);
+		Mockito.verify(cloudBuildService).handleBuildProgress(BUILD_CODE, true);
 
 		Mockito.verify(cloudDeploymentService).handleDeploymentProgress(DEPLOYMENT_CODE);
 	}
@@ -64,7 +64,7 @@ class ToolkitApplicationTests {
 
 		unitUnderTest.run(args);
 
-		Mockito.verify(cloudBuildService).handleBuildProgress(BUILD_CODE);
+		Mockito.verify(cloudBuildService).handleBuildProgress(BUILD_CODE, false);
 
 		Mockito.verifyNoInteractions(cloudDeploymentService);
 	}
@@ -80,7 +80,7 @@ class ToolkitApplicationTests {
 
 		unitUnderTest.run(args);
 
-		Mockito.verify(cloudBuildService).handleBuildProgress(BUILD_CODE);
+		Mockito.verify(cloudBuildService).handleBuildProgress(BUILD_CODE, false);
 
 		Mockito.verify(cloudDeploymentService).handleDeploymentProgress(DEPLOYMENT_CODE);
 

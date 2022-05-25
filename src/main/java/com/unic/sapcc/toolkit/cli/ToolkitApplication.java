@@ -49,6 +49,7 @@ public class ToolkitApplication implements CommandLineRunner {
 	private static final Logger LOG = LoggerFactory.getLogger(ToolkitApplication.class);
 	private static final String SHORTOPTION_HELP = "h";
 	private static final String SHORTOPTION_PIDFILE = "p";
+	private static final String SHORTOPTION_SKIPBUILDTIMEOUTS = "t";
 
 	@Autowired
 	public CloudBuildService cloudBuildService;
@@ -81,6 +82,7 @@ public class ToolkitApplication implements CommandLineRunner {
 		options.addOption(SHORTOPTION_BUILDNAME, "name", true, "build name");
 
 		options.addOption(SHORTOPTION_PIDFILE, "pidfile", true, "process id file");
+		options.addOption(SHORTOPTION_SKIPBUILDTIMEOUTS, "skipBuildTimeouts", false, "skip build timeouts during build monitoring");
 		return options;
 	}
 
@@ -101,13 +103,13 @@ public class ToolkitApplication implements CommandLineRunner {
 				LOG.info("Detected ASYNC option, ignoring any further commands.");
 				return;
 			}
-			watchBuildProgress(buildCode);
+			watchBuildProgress(buildCode, cmd);
 		}
 
 		if (cmd.hasOption(SHORTOPTION_DEPLOY)) {
 			if (!cmd.hasOption(SHORTOPTION_BUILD)) {
 				buildCode = cmd.getOptionValue(SHORTOPTION_BUILDCODE);
-				watchBuildProgress(buildCode);
+				watchBuildProgress(buildCode, cmd);
 			}
 			String deploymentCode = createDeployment(buildCode, cmd);
 
@@ -169,10 +171,10 @@ public class ToolkitApplication implements CommandLineRunner {
 		return cloudDeploymentService.createDeployment(deploymentRequestDTO);
 	}
 
-	private void watchBuildProgress(final String buildCode) {
+	private void watchBuildProgress(final String buildCode, final CommandLine cmd) {
 		LOG.info("Build progress will be watched: " + buildCode);
 		try {
-			cloudBuildService.handleBuildProgress(buildCode);
+			cloudBuildService.handleBuildProgress(buildCode, cmd.hasOption(SHORTOPTION_SKIPBUILDTIMEOUTS));
 		} catch (InterruptedException | IllegalStateException e) {
 			LOG.error("Error during build watching progress", e);
 			System.exit(1);

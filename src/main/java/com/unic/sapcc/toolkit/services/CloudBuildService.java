@@ -29,10 +29,13 @@ public interface CloudBuildService {
 	 * Monitor the build progress for the given buildCode for a maximum time of ${toolkit.build.maxWaitTime}.
 	 * Progress will be updated for the given interval ${toolkit.build.sleepTime}.
 	 *
+	 * Timeout errors can be skipped.
+	 *
 	 * @param buildCode
+	 * @param skipBuildTimeouts
 	 * @return true, if build progress is finished successfully, otherwise false
 	 * @throws InterruptedException
 	 * @throws IllegalStateException
 	 */
-	void handleBuildProgress(String buildCode) throws InterruptedException, IllegalStateException;
+	void handleBuildProgress(String buildCode, boolean skipBuildTimeouts) throws InterruptedException, IllegalStateException;
 }
