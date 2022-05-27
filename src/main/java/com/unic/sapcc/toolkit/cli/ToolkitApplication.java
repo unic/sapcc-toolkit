@@ -103,13 +103,13 @@ public class ToolkitApplication implements CommandLineRunner {
 				LOG.info("Detected ASYNC option, ignoring any further commands.");
 				return;
 			}
-			watchBuildProgress(buildCode, cmd);
+			watchBuildProgress(buildCode, cmd.hasOption(SHORTOPTION_SKIPBUILDTIMEOUTS));
 		}
 
 		if (cmd.hasOption(SHORTOPTION_DEPLOY)) {
 			if (!cmd.hasOption(SHORTOPTION_BUILD)) {
 				buildCode = cmd.getOptionValue(SHORTOPTION_BUILDCODE);
-				watchBuildProgress(buildCode, cmd);
+				watchBuildProgress(buildCode, cmd.hasOption(SHORTOPTION_SKIPBUILDTIMEOUTS));
 			}
 			String deploymentCode = createDeployment(buildCode, cmd);
 
@@ -171,10 +171,10 @@ public class ToolkitApplication implements CommandLineRunner {
 		return cloudDeploymentService.createDeployment(deploymentRequestDTO);
 	}
 
-	private void watchBuildProgress(final String buildCode, final CommandLine cmd) {
+	private void watchBuildProgress(final String buildCode, final boolean skipBuildTimeouts) {
 		LOG.info("Build progress will be watched: " + buildCode);
 		try {
-			cloudBuildService.handleBuildProgress(buildCode, cmd.hasOption(SHORTOPTION_SKIPBUILDTIMEOUTS));
+			cloudBuildService.handleBuildProgress(buildCode, skipBuildTimeouts);
 		} catch (InterruptedException | IllegalStateException e) {
 			LOG.error("Error during build watching progress", e);
 			System.exit(1);
