@@ -94,6 +94,7 @@ public class DefaultCloudBuildService extends AbstractCloudService implements Cl
 			BuildProgressDTO buildProgressDTO = getBuildProgress(buildCode);
 			if (buildProgressDTO == null) {
 				if (skipBuildTimeouts) {
+					TimeUnit.SECONDS.sleep(sleepTime);
 					continue;
 				}
 				return;
