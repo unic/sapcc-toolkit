@@ -109,7 +109,7 @@ class DefaultCloudBuildServiceTest {
 		when(env.getProperty(eq("toolkit.build.sleepTime"), anyString())).thenReturn("5");
 		when(env.getProperty(eq("toolkit.build.maxWaitTime"), anyString())).thenReturn("1");
 
-		unitUnderTest.handleBuildProgress(buildCode);
+		unitUnderTest.handleBuildProgress(buildCode, true);
 
 		verify(restTemplate).exchange(eq(url), eq(HttpMethod.GET), any(HttpEntity.class), eq(BuildProgressDTO.class));
 	}
