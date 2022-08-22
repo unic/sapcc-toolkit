@@ -28,6 +28,9 @@ toolkit.build.sleepTime = <insert your polling/interval rate for build progress 
 toolkit.deploy.maxWaitTime = <insert your maximum waiting time in minutes for deployments here>
 toolkit.deploy.sleepTime= <insert your polling/interval rate in seconds for build progress here>
 
+toolkit.apiConnectTimeout = <insert your maximum connect timeout for all API connections>
+toolkit.apiReadTimeout = <insert your maximum read timeout for all API connections>
+
 notification.teams.enabled = true/false
 notification.teams.webhook.url = <insert your teams webhook url>
 ```
