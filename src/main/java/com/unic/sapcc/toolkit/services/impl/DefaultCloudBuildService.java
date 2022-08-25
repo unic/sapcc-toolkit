@@ -20,12 +20,15 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 @Service
 public class DefaultCloudBuildService extends AbstractCloudService implements CloudBuildService {
 
+	private static final List<BuildStatus> FINAL_STATUS = Arrays.asList(BuildStatus.SUCCESS, BuildStatus.ERROR, BuildStatus.FAIL);
 	private static final Logger LOG = LoggerFactory.getLogger(DefaultCloudBuildService.class);
 
 	public final RestTemplate restTemplate;
@@ -100,8 +103,8 @@ public class DefaultCloudBuildService extends AbstractCloudService implements Cl
 				return;
 			}
 			LOG.info("Build progress: {} %", buildProgressDTO.percentage());
-			if (BuildStatus.SUCCESS.equals(buildProgressDTO.buildStatus())) {
-				LOG.info("Build status: {}", BuildStatus.SUCCESS);
+			if (FINAL_STATUS.contains(buildProgressDTO.buildStatus())) {
+				LOG.info("Build status: {}", buildProgressDTO.buildStatus());
 				notificationService.sendMessage(buildProgressDTO);
 				return;
 			}
