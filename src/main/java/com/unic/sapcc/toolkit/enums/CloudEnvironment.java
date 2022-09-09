@@ -4,5 +4,6 @@ public enum CloudEnvironment {
 	d1,
 	d2,
 	s1,
-	s2
+	s2,
+	p1
 }

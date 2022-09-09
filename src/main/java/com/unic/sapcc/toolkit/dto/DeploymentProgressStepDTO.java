@@ -8,5 +8,6 @@ public record DeploymentProgressStepDTO(
 		String startTimestamp,
 		String endTimestamp,
 		String message,
-		String status, List<DeploymentProgressStepDTO> children) {
+		String status,
+		List<DeploymentProgressStepDTO> children) {
 }

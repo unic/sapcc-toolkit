@@ -1,5 +1,7 @@
 package com.unic.sapcc.toolkit.services.impl;
 
+import com.unic.sapcc.toolkit.dto.DeploymentHistoryListResponseDTO;
+import com.unic.sapcc.toolkit.dto.DeploymentHistoryResponseDTO;
 import com.unic.sapcc.toolkit.dto.DeploymentProgressDTO;
 import com.unic.sapcc.toolkit.dto.DeploymentRequestDTO;
 import com.unic.sapcc.toolkit.dto.DeploymentResponseDTO;
@@ -21,6 +23,7 @@ import org.springframework.retry.support.RetryTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 @Service
@@ -75,6 +78,43 @@ public class DefaultCloudDeploymentService extends AbstractCloudService implemen
 				deployStrategy);
 		LOG.info("New Deployment Request DTO created: {}", deploymentRequestDTO);
 		return deploymentRequestDTO;
+	}
+
+	@Override
+	public void waitForDeploymentClearance(CloudEnvironment targetEnvironment) throws InterruptedException {
+		long startTime = System.currentTimeMillis();
+
+		long sleepTime = Long.parseLong(env.getProperty("toolkit.deploy.sleepTime", "5"));
+		long maxWaitTime = Long.parseLong(env.getProperty("toolkit.deploy.maxWaitTime", "30"));
+		LOG.info("Deployments will be monitored with polling rate of {} sec and max wait time of {} min", sleepTime,
+				maxWaitTime);
+
+		while (true) {
+			if (startTime + maxWaitTime * 1000 * 60 < System.currentTimeMillis()) {
+				throw new IllegalStateException(
+						"Maximum waiting time of " + maxWaitTime + " seconds reached. Aborting deployment monitoring process.");
+			}
+
+			ResponseEntity<DeploymentHistoryListResponseDTO> deployments = restTemplate.exchange(
+					PORTAL_API + subscriptionCode + "/deployments",
+					HttpMethod.GET,
+					prepareHttpEntity(null),
+					DeploymentHistoryListResponseDTO.class);
+
+			Optional<DeploymentHistoryResponseDTO> activeDeployment = deployments.getBody().value()
+					.stream()
+					.filter(deployment -> DeploymentStatus.DEPLOYING.equals(deployment.status()) && targetEnvironment.equals(deployment.environmentCode()))
+					.findAny();
+
+			if (!activeDeployment.isPresent()) {
+				LOG.info("No active deployment found, continuing...");
+				return;
+			}
+			LOG.info("Found active deployment {}. Waiting for it to finish...",activeDeployment.get().code());
+
+
+			TimeUnit.SECONDS.sleep(sleepTime);
+		}
 	}
 
 	@Override
