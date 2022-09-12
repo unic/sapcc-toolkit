@@ -30,6 +30,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDate;
+import java.util.function.Function;
 
 @Profile("!test")
 @SpringBootApplication
@@ -111,6 +112,9 @@ public class ToolkitApplication implements CommandLineRunner {
 				buildCode = cmd.getOptionValue(SHORTOPTION_BUILDCODE);
 				watchBuildProgress(buildCode, cmd.hasOption(SHORTOPTION_SKIPBUILDTIMEOUTS));
 			}
+
+			waitForDeploymentClearance(cmd);
+
 			String deploymentCode = createDeployment(buildCode, cmd);
 
 			if (cmd.hasOption(SHORTOPTION_ASYNC)) {
@@ -175,6 +179,18 @@ public class ToolkitApplication implements CommandLineRunner {
 		LOG.info("Build progress will be watched: " + buildCode);
 		try {
 			cloudBuildService.handleBuildProgress(buildCode, skipBuildTimeouts);
+		} catch (InterruptedException | IllegalStateException e) {
+			LOG.error("Error during build watching progress", e);
+			System.exit(1);
+		}
+	}
+
+	private void waitForDeploymentClearance(CommandLine cmd) {
+		CloudEnvironment deployEnvironment = CloudEnvironment.valueOf(cmd.getOptionValue(SHORTOPTION_ENV, "d1"));
+
+		LOG.info("Waiting for no active deployments...");
+		try {
+			cloudDeploymentService.waitForDeploymentClearance(deployEnvironment);
 		} catch (InterruptedException | IllegalStateException e) {
 			LOG.error("Error during build watching progress", e);
 			System.exit(1);

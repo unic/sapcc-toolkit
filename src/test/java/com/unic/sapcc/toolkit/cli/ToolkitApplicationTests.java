@@ -17,6 +17,10 @@ import org.springframework.test.context.ActiveProfiles;
 import static com.unic.sapcc.toolkit.enums.CloudEnvironment.d1;
 import static com.unic.sapcc.toolkit.enums.DatabaseUpdateMode.NONE;
 import static com.unic.sapcc.toolkit.enums.DeployStrategy.ROLLING_UPDATE;
+import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 @ActiveProfiles("test")
 @SpringBootTest
@@ -43,16 +47,16 @@ class ToolkitApplicationTests {
 		DeploymentRequestDTO deploymentRequest = new DeploymentRequestDTO(BUILD_CODE, NONE, d1, ROLLING_UPDATE);
 		BuildRequestDTO buildRequestDTO = new BuildRequestDTO(APPCODE, BRANCH_NAME, BUILD_NAME);
 
-		Mockito.when(cloudBuildService.createBuild(buildRequestDTO)).thenReturn(BUILD_CODE);
-		Mockito.when(cloudDeploymentService.createDeploymentRequestDTO(BUILD_CODE, NONE, d1, ROLLING_UPDATE))
+		when(cloudBuildService.createBuild(buildRequestDTO)).thenReturn(BUILD_CODE);
+		when(cloudDeploymentService.createDeploymentRequestDTO(BUILD_CODE, NONE, d1, ROLLING_UPDATE))
 				.thenReturn(deploymentRequest);
-		Mockito.when(cloudDeploymentService.createDeployment(deploymentRequest)).thenReturn(DEPLOYMENT_CODE);
+		when(cloudDeploymentService.createDeployment(deploymentRequest)).thenReturn(DEPLOYMENT_CODE);
 
 		unitUnderTest.run(args);
 
-		Mockito.verify(cloudBuildService).handleBuildProgress(BUILD_CODE, true);
+		verify(cloudBuildService).handleBuildProgress(BUILD_CODE, true);
 
-		Mockito.verify(cloudDeploymentService).handleDeploymentProgress(DEPLOYMENT_CODE);
+		verify(cloudDeploymentService).handleDeploymentProgress(DEPLOYMENT_CODE);
 	}
 
 	@Test
@@ -60,11 +64,11 @@ class ToolkitApplicationTests {
 		String[] args = { "-b", "-a", APPCODE, "-n", BUILD_NAME };
 
 		BuildRequestDTO buildRequestDTO = new BuildRequestDTO(APPCODE, "develop", BUILD_NAME);
-		Mockito.when(cloudBuildService.createBuild(buildRequestDTO)).thenReturn(BUILD_CODE);
+		when(cloudBuildService.createBuild(buildRequestDTO)).thenReturn(BUILD_CODE);
 
 		unitUnderTest.run(args);
 
-		Mockito.verify(cloudBuildService).handleBuildProgress(BUILD_CODE, false);
+		verify(cloudBuildService).handleBuildProgress(BUILD_CODE, false);
 
 		Mockito.verifyNoInteractions(cloudDeploymentService);
 	}
@@ -74,16 +78,15 @@ class ToolkitApplicationTests {
 		String[] args = { "-d", "-c", BUILD_CODE, "-s", ROLLING_UPDATE.name(), "-u", NONE.name(), "-e", d1.name() };
 
 		DeploymentRequestDTO deploymentRequest = new DeploymentRequestDTO(BUILD_CODE, NONE, d1, ROLLING_UPDATE);
-		Mockito.when(cloudDeploymentService.createDeploymentRequestDTO(BUILD_CODE, NONE, d1, ROLLING_UPDATE))
+		when(cloudDeploymentService.createDeploymentRequestDTO(BUILD_CODE, NONE, d1, ROLLING_UPDATE))
 				.thenReturn(deploymentRequest);
-		Mockito.when(cloudDeploymentService.createDeployment(deploymentRequest)).thenReturn(DEPLOYMENT_CODE);
+		when(cloudDeploymentService.createDeployment(deploymentRequest)).thenReturn(DEPLOYMENT_CODE);
 
 		unitUnderTest.run(args);
 
-		Mockito.verify(cloudBuildService).handleBuildProgress(BUILD_CODE, false);
-
-		Mockito.verify(cloudDeploymentService).handleDeploymentProgress(DEPLOYMENT_CODE);
-
-		Mockito.verifyNoMoreInteractions(cloudBuildService);
+		verify(cloudBuildService).handleBuildProgress(BUILD_CODE, false);
+		verify(cloudDeploymentService).waitForDeploymentClearance(d1);
+		verify(cloudDeploymentService).handleDeploymentProgress(DEPLOYMENT_CODE);
+		verifyNoMoreInteractions(cloudBuildService);
 	}
 }

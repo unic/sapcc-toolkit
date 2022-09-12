@@ -39,4 +39,12 @@ public interface CloudDeploymentService {
 	 * @throes IllegalStateException
 	 */
 	void handleDeploymentProgress(String deploymentCode) throws InterruptedException, IllegalStateException;
+
+	/**
+	 * Monitors current deployments until no active ones are found. This process will wait for maximum time of ${toolkit.deploy.maxWaitTime}.
+	 * Progress will be re-checked, if required, every ${toolkit.deploy.sleepTime} seconds.
+	 *
+	 * @throws InterruptedException
+	 */
+	void waitForDeploymentClearance(CloudEnvironment targetEnvironment) throws InterruptedException;
 }

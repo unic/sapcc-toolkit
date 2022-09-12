@@ -1,6 +1,7 @@
 package com.unic.sapcc.toolkit.services.impl;
 
 import com.unic.sapcc.toolkit.config.ToolkitConfig;
+import com.unic.sapcc.toolkit.dto.DeploymentHistoryListResponseDTO;
 import com.unic.sapcc.toolkit.dto.DeploymentProgressDTO;
 import com.unic.sapcc.toolkit.dto.DeploymentRequestDTO;
 import com.unic.sapcc.toolkit.dto.DeploymentResponseDTO;
@@ -28,6 +29,8 @@ import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 
 import java.net.SocketTimeoutException;
+import java.util.Collection;
+import java.util.Collections;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
@@ -121,6 +124,21 @@ class DefaultCloudDeploymentServiceTest {
 		unitUnderTest.handleDeploymentProgress(deploymentCode);
 
 		verify(restTemplate).exchange(eq(url), eq(HttpMethod.GET), any(HttpEntity.class), eq(DeploymentProgressDTO.class));
+	}
+
+	@Test
+	void waitForDeploymentClearance() throws Exception {
+		final String url = baseurl + "/deployments";
+		final DeploymentHistoryListResponseDTO deploymentHistory= new DeploymentHistoryListResponseDTO(Collections.EMPTY_LIST);
+
+		when(restTemplate.exchange(eq(url), eq(HttpMethod.GET), any(HttpEntity.class), eq(DeploymentHistoryListResponseDTO.class))).thenReturn(
+				new ResponseEntity<>(deploymentHistory, HttpStatus.OK));
+		when(env.getProperty(eq("toolkit.deploy.sleepTime"), anyString())).thenReturn("5");
+		when(env.getProperty(eq("toolkit.deploy.maxWaitTime"), anyString())).thenReturn("1");
+
+		unitUnderTest.waitForDeploymentClearance(CloudEnvironment.d1);
+
+		verify(restTemplate).exchange(eq(url), eq(HttpMethod.GET), any(HttpEntity.class), eq(DeploymentHistoryListResponseDTO.class));
 	}
 
 	@Test
