@@ -1,6 +1,7 @@
 # SAP Commerce Cloud Toolkit
 
 ![CI status](https://github.com/unic/sapcc-toolkit/actions/workflows/ci.yaml/badge.svg) [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=unic_sapcc-toolkit&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=unic_sapcc-toolkit)
+
 This CLI toolkit provides functionalities to create and monitor builds and deployments within the SAP Commerce Cloud.
 
 ## Setup
