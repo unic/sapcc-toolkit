@@ -1,4 +1,5 @@
 # SAP Commerce Cloud Toolkit
+
 This CLI toolkit provides functionalities to create and monitor builds and deployments within the SAP Commerce Cloud.
 
 ## Setup
@@ -43,9 +44,10 @@ Please use the default Spring boot gradle tasks to build this application:
 ./gradlew bootJar
 ```
 
-
 ## Usage
+
 You can list all current flags and parameters by running the jar with the --help flag:
+
 ```shell
 java -jar build/libs/sapcc-toolkit-*.jar --help
 
@@ -113,9 +115,18 @@ java -jar build/libs/sapcc-toolkit-*.jar --deploy  --buildcode 20211122.1 --upda
 
 ## Publication
 
-### Prerequisites
+## Docker image
+
+A docker image is being build for each build on the main branch. Use it like this:
+
+```shell
+docker run -it --rm -v $PWD/config:/config lennartjuetteunic/sapcc-toolkit --build <OPTIONS>
+```
+
+### Maven (Unic internal)
+
 For publishing artifacts we use the [maven-publish](https://docs.gradle.org/current/userguide/publishing_maven.html) plugin. Since the Unic nexus repository is defined unter the name 'unicEcom' you need to set the variables `unicEcomUsername` and `unicEcomPassword`. This can be done in your `~/.gradle/gradle.properties` for example.
 
-### Upload current publication
-
-```./gradlew publish```
+```shell
+./gradlew publish
+```
