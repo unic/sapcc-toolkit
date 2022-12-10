@@ -172,7 +172,11 @@ public class ToolkitApplication implements CommandLineRunner {
 		DeploymentRequestDTO deploymentRequestDTO = cloudDeploymentService.createDeploymentRequestDTO(buildCode, dbUpdateMode,
 				deployEnvironment, deployStrategy);
 
-		return cloudDeploymentService.createDeployment(deploymentRequestDTO);
+		String deploymentId = cloudDeploymentService.createDeployment(deploymentRequestDTO);
+
+		writeProcessIdToFile(cmd.getOptionValue(SHORTOPTION_PIDFILE), deploymentId);
+
+		return deploymentId;
 	}
 
 	private void watchBuildProgress(final String buildCode, final boolean skipBuildTimeouts) {
